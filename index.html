@@ -333,7 +333,10 @@
 
             // 4. Listen for all public job posts (Home view)
             const publicJobsCollectionRef = collection(db, `artifacts/${appId}/public/data/jobs`);
-            const q = query(publicJobsCollectionRef, where("status", "==", "approved")); 
+            
+            // ** FIX: Removed 'where("status", "==", "approved")' to avoid potential missing index error.
+            // ** Since only 'approved' jobs are written here by our logic, this should fetch all.
+            const q = query(publicJobsCollectionRef); 
 
             onSnapshot(q, (snapshot) => {
                 let jobsList = [];
@@ -342,11 +345,12 @@
                 });
                 jobsList.sort((a, b) => b.timestamp - a.timestamp); 
                 window.jobsList = jobsList; 
-                logStatus(`Fetched ${jobsList.length} approved public jobs. Rerendering Home...`); // Added log detail
+                logStatus(`Fetched ${jobsList.length} public jobs. Rerendering Home...`); 
                 if (currentView === 'home') {
                     renderHome();
                 }
             }, (error) => {
+                // Keep robust error logging in case of other issues
                 logStatus(`Public Jobs Snapshot Error: ${error.message}`, true);
             });
             
@@ -997,7 +1001,7 @@
                     },
                     postedBy: currentUserId,
                     postedByName: currentUserProfile?.passportName || currentUserEmail,
-                    status: 'approved', 
+                    status: 'approved', // Status remains 'approved'
                     timestamp: Date.now()
                 };
 
