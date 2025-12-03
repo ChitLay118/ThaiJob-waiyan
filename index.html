@@ -114,9 +114,9 @@
         let isUserAdmin = false;
         let pendingUsersList = []; 
         let myPostedJobsList = []; 
-
-        // New Global State for Notifications
-        window.notificationsList = [];
+        
+        // NEW: Cache for public contact info
+        window.publicContactsCache = {};
 
         // State variables for selected files (for Cloudinary uploads)
         let selectedPassportFile = null;
@@ -154,7 +154,7 @@
 
         // Utility: Update Notification Badge
         function updateNotificationBadge() {
-            if (window.notificationsList.length > 0) {
+            if (window.notificationsList && window.notificationsList.length > 0) {
                 notificationBadge.classList.remove('hidden');
             } else {
                 notificationBadge.classList.add('hidden');
@@ -163,7 +163,6 @@
 
         // --- Cloudinary Upload Utility ---
         async function uploadToCloudinary(file) {
-            // If the user didn't select a file, or it's just the mock state, return an empty string or null
             if (!file) return null;
 
             const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
@@ -186,7 +185,6 @@
                 return result.secure_url; // Return the secure URL
             } catch (error) {
                 logStatus(`Cloudinary Upload Error: ${error.message}`, true);
-                // Re-throw with a user-friendly message
                 throw new Error('ပုံ သို့မဟုတ် ဗီဒီယို တင်ရာတွင် အမှားဖြစ်ပွားပါသည်။ Cloudinary Credentials ကို စစ်ဆေးပါ။');
             }
         }
@@ -248,10 +246,9 @@
             }
         }
         
-        // --- Authentication Actions ---
+        // --- Authentication Actions (No change) ---
         window.handleAuth = async function(event, isSignup) {
             event.preventDefault();
-            // FIX: Read values directly from DOM elements
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
@@ -279,12 +276,12 @@
         }
 
 
-        // --- Firestore Data Listeners ---
+        // --- Firestore Data Listeners (Updated to include Public Contacts) ---
 
         async function setupFirestoreListeners() {
             if (!currentUserId || !db) return;
 
-            // 1. Listen for current user profile changes
+            // 1. Listen for current user profile changes (Private)
             const userDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/profile/data`);
             onSnapshot(userDocRef, (docSnap) => {
                 currentUserProfile = docSnap.exists() ? docSnap.data() : null;
@@ -319,7 +316,6 @@
                 onSnapshot(pendingColRef, (snapshot) => {
                     pendingUsersList = [];
                     snapshot.forEach(doc => {
-                        // Use doc.id as the actual UID since we store it as the document ID
                         pendingUsersList.push({ uid: doc.id, ...doc.data() });
                     });
                     logStatus(`Fetched ${pendingUsersList.length} pending users from public collection.`);
@@ -334,8 +330,6 @@
 
             // 4. Listen for all public job posts (Home view)
             const publicJobsCollectionRef = collection(db, `artifacts/${appId}/public/data/jobs`);
-            
-            // ** FIX: Using a simple query to fetch ALL jobs in the public collection.
             const q = query(publicJobsCollectionRef); 
 
             logStatus("Starting public jobs listener...");
@@ -352,7 +346,6 @@
                     renderHome();
                 }
             }, (error) => {
-                // Keep robust error logging in case of other issues
                 logStatus(`Public Jobs Snapshot Error: ${error.message}`, true);
             });
             
@@ -363,7 +356,6 @@
                 snapshot.forEach(doc => {
                     window.notificationsList.push({ id: doc.id, ...doc.data() });
                 });
-                // Sort by timestamp descending (newest first)
                 window.notificationsList.sort((a, b) => b.timestamp - a.timestamp); 
                 logStatus(`Fetched ${window.notificationsList.length} public notifications.`);
                 updateNotificationBadge();
@@ -373,9 +365,22 @@
             }, (error) => {
                 logStatus(`Notifications Snapshot Error: ${error.message}`, true);
             });
+            
+            // 6. NEW: Listen for Public Contact Data (All users need this to show job poster info)
+            const publicContactsColRef = collection(db, `artifacts/${appId}/public/data/public_contacts`);
+            onSnapshot(publicContactsColRef, (snapshot) => {
+                window.publicContactsCache = {};
+                snapshot.forEach(doc => {
+                    // Cache the public contact info using the UID as the key
+                    window.publicContactsCache[doc.id] = doc.data(); 
+                });
+                logStatus(`Fetched ${Object.keys(window.publicContactsCache).length} public contact records.`);
+            }, (error) => {
+                logStatus(`Public Contacts Snapshot Error: ${error.message}`, true);
+            });
         }
 
-        // --- UI Update Logic ---
+        // --- UI Update Logic (No change) ---
 
         function updateUIBasedOnProfile() {
             const isApproved = currentUserProfile && currentUserProfile.status === 'approved';
@@ -425,7 +430,6 @@
                 }
 
                 if (currentView === 'post' && (!currentUserProfile || currentUserProfile.status !== 'approved')) {
-                     // Force redirect to profile if trying to post without approval
                      logStatus("Tried to access Post View without approval. Redirecting to Profile.", true);
                      currentView = 'profile'; 
                 }
@@ -480,7 +484,7 @@
             `;
         }
 
-        // --- View 1: Home/Job Feed (Updated to use real image URLs) ---
+        // --- View 1: Home/Job Feed (Updated to call showJobPosterContacts) ---
         function renderHome() {
             contentDiv.innerHTML = '<h2 class="text-xl font-bold mb-4 text-gray-800">အလုပ်အကိုင်များ</h2>';
             
@@ -492,7 +496,6 @@
             }
 
             jobsList.forEach(job => {
-                // Ensure media structure exists
                 const images = job.media?.images || [];
 
                 const imagePreviews = images.map((url, i) => `
@@ -507,8 +510,8 @@
                         <h3 class="text-lg font-semibold text-indigo-700">${job.title || 'အလုပ်အမည်မရှိ'}</h3>
                         <p class="text-sm text-gray-600 mt-1"><strong>👤 တင်သူ:</strong> ${job.postedByName}</p>
                         <p class="text-sm text-gray-600"><strong>📍 တည်နေရာ:</strong> ${job.location}</p>
-                        <p class="text-sm text-gray-600"><strong>☎️ ဖုန်း:</strong> ${job.phoneNumber}</p>
-                        <p class="text-sm text-gray-600 mb-2"><strong>💵 လစာ:</strong> ${job.salaryMin} - ${job.salaryMax} ဘတ်</p>
+                        <p class="text-sm text-gray-600"><strong>💵 လစာ:</strong> ${job.salaryMin} - ${job.salaryMax} ဘတ်</p>
+                        <p class="text-sm text-gray-600 mb-2"><strong>💸 အလုပ်စမတ်ခ:</strong> ${job.smartFee || 0} ဘတ်</p>
                         
                         ${job.description ? `<p class="text-gray-700 mt-2 whitespace-pre-wrap">${job.description.substring(0, 100)}${job.description.length > 100 ? '...' : ''}</p>` : ''}
                         
@@ -517,8 +520,8 @@
                             ${videoPreview}
                         </div>
 
-                        <button onclick="mockApply('${job.id}')" class="mt-3 w-full bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-150">
-                            လျှောက်ထားရန်
+                        <button onclick="showJobPosterContacts('${job.postedBy}', '${job.postedByName}')" class="mt-3 w-full bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-150">
+                            အလုပ်လျှောက်ရန်/ဆက်သွယ်ရန်
                         </button>
                     </div>
                 `;
@@ -526,11 +529,47 @@
             });
         }
 
-        window.mockApply = function(jobId) {
-            alertMessage('လျှောက်လွှာတင်ခြင်း အောင်မြင်ပါသည်', `Admin ထံ အချက်အလက်များ ပေးပို့ပြီးပါပြီ။ (Job ID: ${jobId})`, 'success');
+        // NEW: Function to show poster's contact details
+        window.showJobPosterContacts = function(posterId, posterName) {
+            const contact = window.publicContactsCache[posterId];
+
+            if (!contact) {
+                return alertMessage('အမှား', 'အလုပ်တင်သူ၏ ဆက်သွယ်ရန် အချက်အလက်များကို ရှာမတွေ့ပါ။', 'error');
+            }
+
+            const modalTitle = `${posterName} ၏ ဆက်သွယ်ရန် အချက်အလက်`;
+            const phone = contact.thaiPhoneNumber || 'မဖော်ပြထားပါ';
+            const fbLink = contact.facebookLink || '';
+            const tgLink = contact.telegramLink || '';
+
+            const content = `
+                <div class="space-y-4">
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <p class="text-sm font-semibold text-gray-700">📞 ဖုန်းနံပါတ် (ထိုင်း):</p>
+                        <p class="text-lg font-bold text-indigo-600">${phone}</p>
+                    </div>
+                    
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <p class="text-sm font-semibold text-gray-700">📘 Facebook Link:</p>
+                        ${fbLink 
+                            ? `<a href="${fbLink}" target="_blank" class="text-blue-500 hover:text-blue-700 underline text-sm break-all">${fbLink.substring(0, 40)}...</a>`
+                            : '<p class="text-gray-500 text-sm">မဖော်ပြထားပါ</p>'}
+                    </div>
+
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <p class="text-sm font-semibold text-gray-700">💬 Telegram Link:</p>
+                        ${tgLink 
+                            ? `<a href="${tgLink}" target="_blank" class="text-blue-500 hover:text-blue-700 underline text-sm break-all">${tgLink.substring(0, 40)}...</a>`
+                            : '<p class="text-gray-500 text-sm">မဖော်ပြထားပါ</p>'}
+                    </div>
+                </div>
+            `;
+            
+            showCustomModal(modalTitle, content, 'contact');
         }
 
-        // --- View 2A: Registration/Profile (Updated to show real images) ---
+
+        // --- View 2A: Registration/Profile (Updated for Approved User Edit Form) ---
         
         window.handleProfileFileChange = function(event, type) {
             const file = event.target.files[0];
@@ -557,7 +596,7 @@
             let statusBadge;
             let formContent;
 
-            if (!user || !user.status) {
+            if (!user || !user.status || user.status === 'denied') {
                 statusBadge = '<span class="px-3 py-1 bg-red-100 text-red-700 rounded-full font-medium">❌ မှတ်ပုံတင်ရန် လိုအပ်သည်</span>';
                 formContent = renderProfileSubmissionForm();
             } else if (user.status === 'pending') {
@@ -576,10 +615,9 @@
 
                 formContent = `
                     <div class="space-y-4 mb-6 pb-4 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-800">ကိုယ်ရေးအချက်အလက်</h3>
+                        <h3 class="text-lg font-semibold text-gray-800">ကိုယ်ရေးအချက်အလက် (ဖတ်ရန်သာ)</h3>
                         <p class="text-gray-700"><strong>အီးမေးလ်:</strong> ${currentUserEmail}</p>
                         <p class="text-gray-700"><strong>နာမည် (Passport):</strong> ${user.passportName}</p>
-                        <p class="text-gray-700"><strong>ဖုန်းနံပါတ် (ထိုင်း):</strong> ${user.thaiPhoneNumber}</p>
                         <p class="text-gray-700"><strong>နေရပ်လိပ်စာ:</strong> ${user.address}</p>
                         <div class="grid grid-cols-2 gap-4 pt-2">
                             <div class="text-center bg-gray-200 p-3 rounded-lg text-sm">${passportImg}</div>
@@ -587,6 +625,7 @@
                         </div>
                     </div>
                     
+                    ${renderContactEditForm(user)}
                     ${renderMyPostedJobs()}
                 `;
             }
@@ -603,7 +642,7 @@
             `;
         }
         
-        // Helper function to render the profile submission form
+        // Helper function to render the initial profile submission form (Updated with links)
         function renderProfileSubmissionForm() {
             return `
                 <p class="text-sm text-gray-600 mt-4 mb-4">အလုပ်တင်ခွင့်ရရှိရန် အောက်ပါ အချက်အလက်များကို ဖြည့်စွက်၍ Admin ထံ ခွင့်ပြုချက် တင်သွင်းရပါမည်။</p>
@@ -615,8 +654,18 @@
                     </div>
                     <!-- Phone Number -->
                     <div>
-                        <label for="phone-number" class="block text-sm font-medium text-gray-700">ဖုန်းနံပါတ် (ထိုင်း)</label>
+                        <label for="phone-number" class="block text-sm font-medium text-gray-700">ဖုန်းနံပါတ် (ထိုင်း - ဆက်သွယ်ရန်)</label>
                         <input type="tel" id="phone-number" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" value="${currentUserProfile?.thaiPhoneNumber || ''}">
+                    </div>
+                    <!-- Facebook Link -->
+                    <div>
+                        <label for="facebook-link" class="block text-sm font-medium text-gray-700">Facebook Link (optional)</label>
+                        <input type="url" id="facebook-link" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://www.facebook.com/..." value="${currentUserProfile?.facebookLink || ''}">
+                    </div>
+                    <!-- Telegram Link -->
+                    <div>
+                        <label for="telegram-link" class="block text-sm font-medium text-gray-700">Telegram Link (optional)</label>
+                        <input type="url" id="telegram-link" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://t.me/username or @username" value="${currentUserProfile?.telegramLink || ''}">
                     </div>
                     <!-- Address -->
                     <div>
@@ -646,26 +695,76 @@
                 </form>
             `;
         }
+        
+        // NEW: Helper function to render the contact edit form for approved users
+        function renderContactEditForm(user) {
+            return `
+                <div class="space-y-4 mb-6 pt-4 border-t border-gray-200">
+                    <h3 class="text-lg font-semibold text-indigo-700">ဆက်သွယ်ရန် အချက်အလက် ပြင်ဆင်ရန်</h3>
+                    <p class="text-sm text-gray-600">ဤအချက်အလက်များသည် သင်တင်သော အလုပ်များတွင် အများပြည်သူမြင်နိုင်မည်ဖြစ်ပါသည်။</p>
+                    <form id="contact-edit-form" class="space-y-4" onsubmit="updateContactInfo(event)">
+                        <!-- Phone Number -->
+                        <div>
+                            <label for="edit-phone-number" class="block text-sm font-medium text-gray-700">ဖုန်းနံပါတ် (ထိုင်း - ဆက်သွယ်ရန်)</label>
+                            <input type="tel" id="edit-phone-number" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" value="${user.thaiPhoneNumber || ''}">
+                        </div>
+                        <!-- Facebook Link -->
+                        <div>
+                            <label for="edit-facebook-link" class="block text-sm font-medium text-gray-700">Facebook Link (optional)</label>
+                            <input type="url" id="edit-facebook-link" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://www.facebook.com/..." value="${user.facebookLink || ''}">
+                        </div>
+                        <!-- Telegram Link -->
+                        <div>
+                            <label for="edit-telegram-link" class="block text-sm font-medium text-gray-700">Telegram Link (optional)</label>
+                            <input type="url" id="edit-telegram-link" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://t.me/username or @username" value="${user.telegramLink || ''}">
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-4">
+                            အချက်အလက် ပြင်ဆင်ရန်
+                        </button>
+                    </form>
+                </div>
+            `;
+        }
 
-        // Helper function to render the user's posted jobs
-        function renderMyPostedJobs() {
-            let jobsHtml = `<h3 class="text-lg font-semibold text-gray-800 mb-3">သင့်မှ တင်ထားသော အလုပ်များ (${myPostedJobsList.length} ခု)</h3>`;
-            
-            if (myPostedJobsList.length === 0) {
-                jobsHtml += '<p class="text-center text-gray-500 p-4 bg-gray-50 rounded-lg">သင် တင်ထားသော အလုပ်များ မရှိသေးပါ။</p>';
-                return jobsHtml;
+        // NEW: Function to handle updating contact info for approved users
+        window.updateContactInfo = async function(event) {
+            event.preventDefault();
+            if (!currentUserId || !db) return alertMessage('အမှား', 'စနစ်ကို စတင်၍ မရသေးပါ။', 'error');
+
+            const phoneNumber = document.getElementById('edit-phone-number').value.trim();
+            const facebookLink = document.getElementById('edit-facebook-link').value.trim();
+            const telegramLink = document.getElementById('edit-telegram-link').value.trim();
+
+            if (!phoneNumber) {
+                return alertMessage('အမှား', 'ဖုန်းနံပါတ် ဖြည့်သွင်းရန် လိုအပ်ပါသည်။', 'error');
             }
 
-            myPostedJobsList.forEach(job => {
-                 jobsHtml += `
-                    <div class="bg-white p-3 mb-2 rounded-lg border border-indigo-100 shadow-sm">
-                        <h4 class="font-semibold text-indigo-700">${job.title}</h4>
-                        <p class="text-xs text-gray-600"><strong>📍 တည်နေရာ:</strong> ${job.location}</p>
-                        <p class="text-xs text-gray-600"><strong>💵 လစာ:</strong> ${job.salaryMin} - ${job.salaryMax} ဘတ်</p>
-                    </div>
-                `;
-            });
-            return jobsHtml;
+            try {
+                showLoading(); 
+                
+                const updateData = {
+                    thaiPhoneNumber: phoneNumber,
+                    facebookLink: facebookLink,
+                    telegramLink: telegramLink,
+                    lastUpdated: Date.now()
+                };
+
+                // 1. Update User's Private Profile (keeps all profile data)
+                const userDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/profile/data`);
+                await updateDoc(userDocRef, updateData);
+                
+                // 2. Save/Update Public Contact Collection (for job seekers)
+                const publicContactRef = doc(db, `artifacts/${appId}/public/data/public_contacts`, currentUserId); 
+                await setDoc(publicContactRef, updateData, { merge: true }); // Use setDoc with merge to ensure creation if missing
+                
+                hideLoading();
+                alertMessage('ပြင်ဆင်မှု အောင်မြင်ပါသည်', 'ဆက်သွယ်ရန် အချက်အလက်များကို အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ။', 'success');
+                // The onSnapshot listener will rerender the profile view
+            } catch (error) {
+                hideLoading();
+                logStatus(`Contact Update Error: ${error.message}`, true);
+                alertMessage('အမှား', `ပြင်ဆင်၍ မရပါ။ ${error.message}`, 'error');
+            }
         }
 
         window.submitProfile = async function(event) {
@@ -673,16 +772,17 @@
             if (!currentUserId || !db) return alertMessage('အမှား', 'စနစ်ကို စတင်၍ မရသေးပါ။', 'error');
 
             const passportName = document.getElementById('passport-name').value;
-            const phoneNumber = document.getElementById('phone-number').value;
+            const phoneNumber = document.getElementById('phone-number').value.trim();
+            const facebookLink = document.getElementById('facebook-link').value.trim();
+            const telegramLink = document.getElementById('telegram-link').value.trim();
             const address = document.getElementById('address').value;
 
-            // Check for file presence
             if (!selectedPassportFile || !selectedUserPhotoFile) {
                 return alertMessage('အမှား', 'ပတ်စပို့ပုံနှင့် လူပုံကို ရွေးချယ်ရန် လိုအပ်ပါသည်။', 'error');
             }
 
             try {
-                showLoading(); // Show global loading during upload
+                showLoading(); 
                 logStatus("Starting profile image upload to Cloudinary...");
 
                 // 1. Upload files concurrently
@@ -690,18 +790,19 @@
                     uploadToCloudinary(selectedPassportFile),
                     uploadToCloudinary(selectedUserPhotoFile)
                 ]);
-                logStatus(`Image uploads complete. Passport URL: ${passportUrl ? 'OK' : 'FAIL'}, User Photo URL: ${userPhotoUrl ? 'OK' : 'FAIL'}`);
                 
-                // 2. Prepare profile data with real URLs
+                // 2. Prepare profile data with real URLs and new links
                 const profileData = {
                     passportName: passportName,
                     thaiPhoneNumber: phoneNumber,
+                    facebookLink: facebookLink,
+                    telegramLink: telegramLink,
                     address: address,
                     passportPhotoUrl: passportUrl,
                     userPhotoUrl: userPhotoUrl,
                     status: 'pending', // Initial status is pending admin approval
                     timestamp: Date.now(),
-                    email: currentUserEmail // Add email for easy admin view
+                    email: currentUserEmail 
                 };
 
                 // 3a. Save to User's Private Profile
@@ -726,13 +827,35 @@
             }
         }
         
-        // --- View 2B: Admin Panel (Admin User only) ---
+        // Helper function to render the user's posted jobs (No change)
+        function renderMyPostedJobs() {
+            let jobsHtml = `<h3 class="text-lg font-semibold text-gray-800 mb-3 pt-4 border-t border-gray-200">သင့်မှ တင်ထားသော အလုပ်များ (${myPostedJobsList.length} ခု)</h3>`;
+            
+            if (myPostedJobsList.length === 0) {
+                jobsHtml += '<p class="text-center text-gray-500 p-4 bg-gray-50 rounded-lg">သင် တင်ထားသော အလုပ်များ မရှိသေးပါ။</p>';
+                return jobsHtml;
+            }
+
+            myPostedJobsList.forEach(job => {
+                 jobsHtml += `
+                    <div class="bg-white p-3 mb-2 rounded-lg border border-indigo-100 shadow-sm">
+                        <h4 class="font-semibold text-indigo-700">${job.title}</h4>
+                        <p class="text-xs text-gray-600"><strong>📍 တည်နေရာ:</strong> ${job.location}</p>
+                        <p class="text-xs text-gray-600"><strong>💵 လစာ:</strong> ${job.salaryMin} - ${job.salaryMax} ဘတ်</p>
+                        <p class="text-xs text-gray-600"><strong>💸 စမတ်ခ:</strong> ${job.smartFee || 0} ဘတ်</p>
+                    </div>
+                `;
+            });
+            return jobsHtml;
+        }
+
+        // --- View 2B: Admin Panel (Updated to reflect new fields) ---
         function renderAdminPanel() {
             contentDiv.innerHTML = `
                 <h2 class="text-xl font-bold mb-4 text-gray-800">Admin Panel</h2>
                 <p class="mb-6 text-sm text-gray-600">အီးမေးလ်: ${ADMIN_EMAIL}</p>
                 
-                <!-- Send Notification Section -->
+                <!-- Send Notification Section (No change) -->
                 <div class="bg-indigo-50 p-4 rounded-xl shadow-inner mb-6">
                     <h3 class="text-lg font-semibold text-indigo-700 mb-3 border-b border-indigo-200 pb-2">သတိပေးချက် အားလုံးသို့ ပို့ရန်</h3>
                     <form id="send-notification-form" class="space-y-3" onsubmit="sendNotification(event)">
@@ -766,6 +889,8 @@
                         <p class="text-sm text-gray-700"><strong>အီးမေးလ်:</strong> ${user.email}</p>
                         <p class="text-sm text-gray-700"><strong>UID:</strong> ${user.uid.substring(0, 8)}...</p>
                         <p class="text-sm text-gray-700"><strong>ဖုန်း:</strong> ${user.thaiPhoneNumber}</p>
+                        <p class="text-sm text-gray-700"><strong>FB:</strong> ${user.facebookLink || 'မရှိပါ'}</p>
+                        <p class="text-sm text-gray-700"><strong>TG:</strong> ${user.telegramLink || 'မရှိပါ'}</p>
                         <p class="text-sm text-gray-700 mb-2"><strong>လိပ်စာ:</strong> ${user.address}</p>
                         
                         <div class="grid grid-cols-2 gap-4 pt-2 mb-3">
@@ -812,15 +937,32 @@
 
         window.approveUser = async function(userIdToApprove) {
             if (!isUserAdmin || !db) return alertMessage('အမှား', 'Admin အဖြစ် ဝင်ရောက်ထားရပါမည်။', 'error');
+            
+            // Fetch the user's current pending data (includes phone, fb, tg, etc.)
+            const pendingDocRef = doc(db, `artifacts/${appId}/public/data/pending_profiles`, userIdToApprove);
+            const pendingSnap = await getDoc(pendingDocRef);
+            
+            if (!pendingSnap.exists()) {
+                return alertMessage('အမှား', 'ခွင့်ပြုရန် User ၏ အချက်အလက်များကို ရှာမတွေ့ပါ။', 'error');
+            }
+            
+            const userData = pendingSnap.data();
 
             try {
                 // 1. Update the user's private profile status
                 const userDocRef = doc(db, `artifacts/${appId}/users/${userIdToApprove}/profile/data`);
                 await updateDoc(userDocRef, { status: 'approved' });
                 
-                // 2. Delete the public pending profile document to remove it from the admin's view
-                const pendingProfilesDocRef = doc(db, `artifacts/${appId}/public/data/pending_profiles`, userIdToApprove);
-                await deleteDoc(pendingProfilesDocRef);
+                // 2. NEW: Save Public Contact Info for job seekers (use data from pending profile)
+                const publicContactRef = doc(db, `artifacts/${appId}/public/data/public_contacts`, userIdToApprove);
+                await setDoc(publicContactRef, {
+                    thaiPhoneNumber: userData.thaiPhoneNumber || '',
+                    facebookLink: userData.facebookLink || '',
+                    telegramLink: userData.telegramLink || ''
+                });
+                
+                // 3. Delete the public pending profile document
+                await deleteDoc(pendingDocRef);
                 
                 alertMessage('ခွင့်ပြုချက် အောင်မြင်', `User ID: ${userIdToApprove.substring(0, 8)} ကို အောင်မြင်စွာ ခွင့်ပြုလိုက်ပါပြီ။`, 'success');
             } catch (error) {
@@ -829,38 +971,40 @@
             }
         }
         
-        // --- View 4: Notifications Inbox ---
+        // --- View 4: Notifications Inbox (No change) ---
         
         function renderNotifications() {
             contentDiv.innerHTML = `
                 <h2 class="text-xl font-bold mb-4 text-gray-800">သတိပေးချက်များ (Admin မှ ပေးပို့သည်)</h2>
-                ${window.notificationsList.length > 0 ? '' : '<p class="text-center text-gray-500 mt-10 p-4 bg-gray-100 rounded-lg">လက်ခံရရှိထားသော သတိပေးချက်များ မရှိသေးပါ။</p>'}
+                ${window.notificationsList && window.notificationsList.length > 0 ? '' : '<p class="text-center text-gray-500 mt-10 p-4 bg-gray-100 rounded-lg">လက်ခံရရှိထားသော သတိပေးချက်များ မရှိသေးပါ။</p>'}
                 <div id="notifications-list" class="space-y-4"></div>
             `;
             
             const listDiv = document.getElementById('notifications-list');
             
-            window.notificationsList.forEach(noti => {
-                const date = new Date(noti.timestamp).toLocaleString('my-MM', {
-                    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            if(window.notificationsList) {
+                window.notificationsList.forEach(noti => {
+                    const date = new Date(noti.timestamp).toLocaleString('my-MM', {
+                        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+                    
+                    const notiCard = `
+                        <div class="bg-white p-4 rounded-xl shadow-md border border-indigo-100">
+                            <h3 class="text-lg font-semibold text-indigo-700">${noti.title}</h3>
+                            <p class="text-xs text-gray-500 mb-2">
+                                <span class="font-medium text-gray-600">Admin</span> 
+                                <span class="ml-2">| ${date}</span>
+                            </p>
+                            <p class="text-gray-700 whitespace-pre-wrap">${noti.content}</p>
+                        </div>
+                    `;
+                    listDiv.innerHTML += notiCard;
                 });
-                
-                const notiCard = `
-                    <div class="bg-white p-4 rounded-xl shadow-md border border-indigo-100">
-                        <h3 class="text-lg font-semibold text-indigo-700">${noti.title}</h3>
-                        <p class="text-xs text-gray-500 mb-2">
-                            <span class="font-medium text-gray-600">Admin</span> 
-                            <span class="ml-2">| ${date}</span>
-                        </p>
-                        <p class="text-gray-700 whitespace-pre-wrap">${noti.content}</p>
-                    </div>
-                `;
-                listDiv.innerHTML += notiCard;
-            });
+            }
         }
 
 
-        // --- View 3: Post Job Form (Approved Users Only) ---
+        // --- View 3: Post Job Form (Updated to use Job Smart Fee) ---
 
         window.handleJobMediaChange = function(event, type) {
             const files = Array.from(event.target.files);
@@ -892,7 +1036,6 @@
         function renderJobPostForm() {
             logStatus("Attempting to render Job Post Form...");
             
-            // New Robust Error Handling for Rendering
             try {
                 if (!currentUserProfile || currentUserProfile.status !== 'approved') {
                     logStatus("Job Post Form redirecting to Profile: User not approved.", true);
@@ -924,18 +1067,18 @@
                                 <input type="text" id="job-location" required placeholder="ဥပမာ။ ဘန်ကောက်၊ ချင်းမိုင်" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
                             </div>
                             
-                            <!-- Contact Phone Number -->
+                            <!-- NEW: Job Smart Fee -->
                             <div>
-                                <label for="job-phone-number" class="block text-sm font-medium text-gray-700">ဆက်သွယ်ရန် ဖုန်းနံပါတ်</label>
-                                <input type="tel" id="job-phone-number" required placeholder="ဥပမာ။ 08x-xxxxxxx" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                                <label for="job-smart-fee" class="block text-sm font-medium text-gray-700">💸 အလုပ်စမတ်ခ (ဘတ်)</label>
+                                <input type="number" id="job-smart-fee" required placeholder="ဥပမာ။ 1000 (ဘတ်)" min="0" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
                             </div>
 
                             <!-- Salary Smart Card (Number Inputs) -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">လစာ (ဘတ်)</label>
+                                <label class="block text-sm font-medium text-gray-700">💵 လစာ (ဘတ်)</label>
                                 <div class="grid grid-cols-2 gap-2 mt-1">
-                                    <input type="number" id="salary-min" required placeholder="အနိမ့်ဆုံး" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
-                                    <input type="number" id="salary-max" required placeholder="အမြင့်ဆုံး" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                                    <input type="number" id="salary-min" required placeholder="အနိမ့်ဆုံး" min="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                                    <input type="number" id="salary-max" required placeholder="အမြင့်ဆုံး" min="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
                                 </div>
                             </div>
 
@@ -945,7 +1088,7 @@
                                 <textarea id="job-description" rows="5" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"></textarea>
                             </div>
                             
-                            <!-- Media Uploads (Real Upload) -->
+                            <!-- Media Uploads (No change) -->
                             <div class="pt-2 border-t">
                                 <label class="block text-sm font-semibold text-gray-800 mb-2">ဓာတ်ပုံ ၃ ပုံ နှင့် ဗီဒီယို ၁ ခု (Cloudinary Upload)</label>
                                 <div class="space-y-3">
@@ -994,21 +1137,25 @@
             // Input Validation & Parsing
             const title = document.getElementById('job-title').value;
             const jobLocation = document.getElementById('job-location').value;
-            const jobPhoneNumber = document.getElementById('job-phone-number').value;
+            const smartFeeInput = document.getElementById('job-smart-fee').value; // NEW
             const salaryMinInput = document.getElementById('salary-min').value;
             const salaryMaxInput = document.getElementById('salary-max').value;
             const description = document.getElementById('job-description').value;
 
-            if (!salaryMinInput || !salaryMaxInput) {
-                return alertMessage('အမှား', 'လစာ အနည်းဆုံး/အများဆုံးကို ဖြည့်သွင်းရန် လိုအပ်ပါသည်။', 'error');
+            if (!salaryMinInput || !salaryMaxInput || !smartFeeInput) {
+                return alertMessage('အမှား', 'လစာနှင့် အလုပ်စမတ်ခတို့ကို ဖြည့်သွင်းရန် လိုအပ်ပါသည်။', 'error');
             }
 
             const salaryMin = parseInt(salaryMinInput);
             const salaryMax = parseInt(salaryMaxInput);
+            const smartFee = parseInt(smartFeeInput); // NEW
 
 
-            if (isNaN(salaryMin) || isNaN(salaryMax) || salaryMin <= 0 || salaryMax <= 0 || salaryMin > salaryMax) {
+            if (isNaN(salaryMin) || isNaN(salaryMax) || salaryMin < 0 || salaryMax < 0 || salaryMin > salaryMax) {
                 return alertMessage('အမှား', 'လစာသည် မှန်ကန်သော ဂဏန်းဖြစ်ရမည်။ (အနိမ့်ဆုံးသည် အမြင့်ဆုံးထက် မပိုရ။)', 'error');
+            }
+            if (isNaN(smartFee) || smartFee < 0) {
+                 return alertMessage('အမှား', 'အလုပ်စမတ်ခသည် မှန်ကန်သော ဂဏန်း (ဘတ်) ဖြစ်ရပါမည်။', 'error');
             }
             if (selectedJobImages.length === 0) {
                 return alertMessage('အမှား', 'အလုပ်ဓာတ်ပုံ အနည်းဆုံး တစ်ပုံ ရွေးချယ်ရန် လိုအပ်ပါသည်။', 'error');
@@ -1027,28 +1174,26 @@
                 if (selectedJobVideo) {
                     uploadedVideoUrl = await uploadToCloudinary(selectedJobVideo);
                 }
-                logStatus(`Job media uploads complete. Images: ${uploadedImageUrls.length}, Video URL: ${uploadedVideoUrl ? 'OK' : 'N/A'}`);
-
-
-                // 3. Prepare job data with real URLs
+                
+                // 3. Prepare job data with real URLs and new fields
                 const jobData = {
                     title: title,
                     location: jobLocation,
-                    phoneNumber: jobPhoneNumber,
+                    smartFee: smartFee, // NEW: Smart Fee added
                     salaryMin: salaryMin,
                     salaryMax: salaryMax,
                     description: description,
                     media: {
-                        images: uploadedImageUrls.filter(url => url), // Filter out nulls
+                        images: uploadedImageUrls.filter(url => url), 
                         video: uploadedVideoUrl
                     },
                     postedBy: currentUserId,
                     postedByName: currentUserProfile?.passportName || currentUserEmail,
-                    status: 'approved', // Status remains 'approved'
+                    status: 'approved', 
                     timestamp: Date.now()
                 };
 
-                // 4. Save to Firestore and get the new document reference
+                // 4. Save to Firestore
                 const collectionRef = collection(db, `artifacts/${appId}/public/data/jobs`);
                 const newDocRef = await addDoc(collectionRef, jobData);
                 logStatus(`Job saved to Firestore: ${newDocRef.id}`);
@@ -1064,9 +1209,7 @@
                 document.getElementById('job-video-status').textContent = '';
                 
                 hideLoading();
-                // Show the newly created Job ID in the success message
                 alertMessage('အလုပ်တင်ခြင်း အောင်မြင်ပါသည်', `အလုပ်အသစ်ကို Home စာမျက်နှာတွင် ချက်ချင်း မြင်နိုင်ပါပြီ။ (ID: ${newDocRef.id})`, 'success');
-                // *** FIX: Explicitly set view back to home after successful submission ***
                 setView('home'); 
             } catch (error) {
                 hideLoading();
@@ -1075,7 +1218,7 @@
             }
         }
         
-        // --- Custom Alert/Modal (Replacing alert()) ---
+        // --- Custom Alert/Modal (Updated for Contact Info Modal) ---
         
         function alertMessage(title, message, type = 'info') {
             const modalId = 'custom-alert-modal';
@@ -1086,6 +1229,8 @@
                 modal.id = modalId;
                 document.body.appendChild(modal);
             }
+            
+            modal.querySelector('.modal-content')?.remove(); // Remove previous content if contact modal was used
 
             let bgColor = 'bg-indigo-100';
             let titleColor = 'text-indigo-800';
@@ -1101,8 +1246,8 @@
                 icon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
             }
 
-            modal.innerHTML = `
-                <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm transform transition-all">
+            const alertHtml = `
+                <div class="modal-content bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm transform transition-all">
                     <div class="flex items-center ${bgColor} p-3 rounded-lg mb-4">
                         <div class="${titleColor} mr-3">${icon}</div>
                         <h3 class="text-lg font-bold ${titleColor}">${title}</h3>
@@ -1114,8 +1259,43 @@
                     </button>
                 </div>
             `;
+            modal.innerHTML = alertHtml;
             modal.classList.remove('hidden');
         }
+        
+        // NEW: Dedicated function for Contact Modal
+        function showCustomModal(title, contentHtml, type) {
+            const modalId = 'custom-alert-modal';
+            let modal = document.getElementById(modalId);
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50 p-4 hidden';
+                modal.id = modalId;
+                document.body.appendChild(modal);
+            }
+            
+            let icon;
+            if (type === 'contact') {
+                 icon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-3"/><path d="m6 16-2 6"/><path d="m14 16-2 6"/><path d="M16 2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/></svg>`;
+            }
+
+            const modalHtml = `
+                <div class="modal-content bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm transform transition-all">
+                    <div class="flex items-center bg-indigo-100 p-3 rounded-lg mb-4">
+                        <div class="text-indigo-800 mr-3">${icon}</div>
+                        <h3 class="text-lg font-bold text-indigo-800">${title}</h3>
+                    </div>
+                    ${contentHtml}
+                    <button onclick="document.getElementById('${modalId}').classList.add('hidden')"
+                            class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-150 mt-6">
+                        ပိတ်မည်
+                    </button>
+                </div>
+            `;
+            modal.innerHTML = modalHtml;
+            modal.classList.remove('hidden');
+        }
+
 
         // --- Start the application ---
         initFirebase();
