@@ -11,33 +11,51 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f4f7f6;
+            background-color: #111827;
+            color: #f9fafb;
         }
         /* Custom scrollbar for better visibility */
         ::-webkit-scrollbar {
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: #374151;
         }
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
+            background: #4b5563;
             border-radius: 4px;
+        }
+        /* Dark mode styling */
+        .dark-bg {
+            background-color: #1f2937;
+        }
+        .dark-card {
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+        .dark-input {
+            background-color: #4b5563;
+            border-color: #6b7280;
+            color: #f9fafb;
+        }
+        .dark-input:focus {
+            border-color: #6366f1;
+            ring-color: #6366f1;
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <div id="app" class="flex-grow flex flex-col max-w-lg mx-auto w-full bg-white shadow-lg">
+    <div id="app" class="flex-grow flex flex-col max-w-lg mx-auto w-full dark-bg shadow-lg">
 
         <!-- Header -->
-        <header class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-10 flex justify-between items-center">
+        <header class="bg-indigo-800 text-white p-4 shadow-md sticky top-0 z-10 flex justify-between items-center">
             <h1 class="text-xl font-bold">အလုပ်အကိုင် ရှာဖွေရေး</h1>
-            <button id="logout-btn" onclick="handleLogout()" class="text-sm px-3 py-1 bg-indigo-700 rounded-full hover:bg-indigo-800 transition duration-150 hidden">
+            <button id="logout-btn" onclick="handleLogout()" class="text-sm px-3 py-1 bg-indigo-900 rounded-full hover:bg-indigo-700 transition duration-150 hidden">
                 ထွက်ရန်
             </button>
         </header>
-        <div id="user-info-bar" class="bg-indigo-500 text-white text-xs p-1 text-center hidden">
+        <div id="user-info-bar" class="bg-indigo-700 text-white text-xs p-1 text-center hidden">
             <span id="user-email-display"></span>
             <span id="user-id-display" class="ml-2 opacity-70"></span>
         </div>
@@ -45,31 +63,31 @@
         <!-- Main Content Area -->
         <main id="content" class="flex-grow p-4 overflow-y-auto">
             <div class="flex justify-center items-center h-full">
-                <div id="loading-spinner" class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                <div id="loading-spinner" class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
             </div>
         </main>
 
         <!-- Navigation Menu Bar -->
-        <nav id="main-nav" class="bg-white border-t border-gray-200 sticky bottom-0 z-10 shadow-lg hidden">
+        <nav id="main-nav" class="dark-bg border-t border-gray-700 sticky bottom-0 z-10 shadow-lg hidden">
             <div class="flex justify-around text-center text-xs">
-                <button onclick="setView('home')" class="nav-item p-3 w-1/4 text-indigo-600 font-semibold border-t-2 border-indigo-600">
+                <button onclick="setView('home')" class="nav-item p-3 w-1/4 text-indigo-400 font-semibold border-t-2 border-indigo-400">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-auto mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     မူလ
                 </button>
                 
                 <!-- Notification Inbox Button -->
-                <button onclick="setView('notifications')" class="nav-item p-3 w-1/4 text-gray-500 relative">
+                <button onclick="setView('notifications')" class="nav-item p-3 w-1/4 text-gray-400 relative">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-auto mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                     သတိပေးချက်
                     <!-- Notification Badge (Shows if there are any notifications) -->
-                    <span id="notification-badge" class="hidden absolute top-1 right-10 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+                    <span id="notification-badge" class="hidden absolute top-1 right-10 w-3 h-3 bg-red-500 rounded-full border-2 border-gray-800"></span>
                 </button>
 
-                <button onclick="setView('profile')" class="nav-item p-3 w-1/4 text-gray-500">
+                <button onclick="setView('profile')" class="nav-item p-3 w-1/4 text-gray-400">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-auto mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     ပရိုဖိုင်
                 </button>
-                <button id="post-job-nav-btn" onclick="setView('post')" class="nav-item p-3 w-1/4 text-gray-500 hidden">
+                <button id="post-job-nav-btn" onclick="setView('post')" class="nav-item p-3 w-1/4 text-gray-400 hidden">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-auto mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>
                     အလုပ်တင်ရန်
                 </button>
@@ -114,6 +132,7 @@
         let isUserAdmin = false;
         let pendingUsersList = []; 
         let myPostedJobsList = []; 
+        let approvedUsersList = []; // NEW: List of approved users for Admin
         
         // NEW: Cache for public contact info
         window.publicContactsCache = {};
@@ -122,7 +141,6 @@
         let selectedPassportFile = null;
         let selectedUserPhotoFile = null;
         let selectedJobImages = []; 
-        let selectedJobVideo = null; 
 
         const contentDiv = document.getElementById('content');
         const loadingSpinner = document.getElementById('loading-spinner');
@@ -232,7 +250,7 @@
             } catch (error) {
                 logStatus(`Firebase Initialization Failed: ${error.message}`, true);
                 hideLoading();
-                contentDiv.innerHTML = '<p class="text-red-500 text-center">Firebase စတင်မှု အမှား။</p>';
+                contentDiv.innerHTML = '<p class="text-red-400 text-center">Firebase စတင်မှု အမှား။</p>';
             }
         }
 
@@ -276,7 +294,7 @@
         }
 
 
-        // --- Firestore Data Listeners (Updated to include Public Contacts) ---
+        // --- Firestore Data Listeners (Updated to include Approved Users) ---
 
         async function setupFirestoreListeners() {
             if (!currentUserId || !db) return;
@@ -325,6 +343,38 @@
                 }, (error) => {
                     logStatus(`Admin Pending User Snapshot Error: ${error.message}`, true);
                 });
+
+                // NEW: Listen for approved users (Admin only)
+                const approvedUsersQuery = query(
+                    collection(db, `artifacts/${appId}/users`),
+                    where("profile.data.status", "==", "approved")
+                );
+                
+                // We need to manually query subcollections
+                const allUsersRef = collection(db, `artifacts/${appId}/users`);
+                const allUsersSnap = await getDocs(allUsersRef);
+                
+                approvedUsersList = [];
+                for (const userDoc of allUsersSnap.docs) {
+                    const userProfileRef = doc(db, `artifacts/${appId}/users/${userDoc.id}/profile/data`);
+                    const profileSnap = await getDoc(userProfileRef);
+                    
+                    if (profileSnap.exists() && profileSnap.data().status === 'approved') {
+                        approvedUsersList.push({
+                            uid: userDoc.id,
+                            ...profileSnap.data()
+                        });
+                    }
+                }
+                
+                // Sort by name
+                approvedUsersList.sort((a, b) => {
+                    const nameA = a.passportName || a.email || '';
+                    const nameB = b.passportName || b.email || '';
+                    return nameA.localeCompare(nameB);
+                });
+                
+                logStatus(`Fetched ${approvedUsersList.length} approved users.`);
             }
 
 
@@ -387,13 +437,13 @@
             
             // Highlight the active nav item
             document.querySelectorAll('.nav-item').forEach(btn => {
-                btn.classList.remove('text-indigo-600', 'border-indigo-600', 'font-semibold');
-                btn.classList.add('text-gray-500', 'border-t-2', 'border-transparent');
+                btn.classList.remove('text-indigo-400', 'border-indigo-400', 'font-semibold');
+                btn.classList.add('text-gray-400', 'border-t-2', 'border-transparent');
             });
             const activeBtn = document.querySelector(`.nav-item[onclick="setView('${currentView}')"]`);
             if (activeBtn) {
-                activeBtn.classList.add('text-indigo-600', 'border-indigo-600', 'font-semibold');
-                activeBtn.classList.remove('text-gray-500', 'border-transparent');
+                activeBtn.classList.add('text-indigo-400', 'border-indigo-400', 'font-semibold');
+                activeBtn.classList.remove('text-gray-400', 'border-transparent');
             }
             
             updateNotificationBadge(); // Update badge on every UI change
@@ -452,31 +502,31 @@
                 }
             } catch (error) {
                  logStatus(`Critical Error during View Render for ${currentView}: ${error.message}`, true);
-                 contentDiv.innerHTML = `<div class="text-red-500 text-center p-8">မြင်ကွင်းပြရာတွင် အရေးကြီးသော အမှားဖြစ်ပွားပါသည်။ Console ကို စစ်ဆေးပါ။: ${error.message}</div>`;
+                 contentDiv.innerHTML = `<div class="text-red-400 text-center p-8">မြင်ကွင်းပြရာတွင် အရေးကြီးသော အမှားဖြစ်ပွားပါသည်။ Console ကို စစ်ဆေးပါ။: ${error.message}</div>`;
             }
         }
 
-        // --- View: Login/Signup (No change) ---
+        // --- View: Login/Signup (Updated for Dark Mode) ---
         function renderLoginSignup() {
             hideLoading();
             contentDiv.innerHTML = `
-                <div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg border border-gray-100">
-                    <h2 class="text-2xl font-bold text-center text-indigo-700 mb-6">ဝင်ရောက်ရန်/အကောင့်ဖွင့်ရန်</h2>
+                <div class="max-w-md mx-auto mt-10 p-6 dark-card rounded-xl shadow-lg border border-gray-700">
+                    <h2 class="text-2xl font-bold text-center text-indigo-300 mb-6">ဝင်ရောက်ရန်/အကောင့်ဖွင့်ရန်</h2>
                     
                     <form id="auth-form" class="space-y-4">
                         <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700">အီးမေးလ် (Gmail)</label>
-                            <input type="email" id="email" name="email" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="ဥပမာ။ user@gmail.com">
+                            <label for="email" class="block text-sm font-medium text-gray-300">အီးမေးလ် (Gmail)</label>
+                            <input type="email" id="email" name="email" required class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="ဥပမာ။ user@gmail.com">
                         </div>
                         <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700">စကားဝှက်</label>
-                            <input type="password" id="password" name="password" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="အနည်းဆုံး ၆ လုံး">
+                            <label for="password" class="block text-sm font-medium text-gray-300">စကားဝှက်</label>
+                            <input type="password" id="password" name="password" required class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="အနည်းဆုံး ၆ လုံး">
                         </div>
-                        <button type="button" onclick="handleAuth(event, false)" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150">
+                        <button type="button" onclick="handleAuth(event, false)" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-700 hover:bg-indigo-600 transition duration-150">
                             ဝင်ရောက်ရန် (Login)
                         </button>
-                        <p class="text-center text-gray-500 pt-2">အကောင့်မရှိသေးဘူးလား?</p>
-                        <button type="button" onclick="handleAuth(event, true)" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-indigo-600 border border-indigo-600 bg-white hover:bg-indigo-50 transition duration-150">
+                        <p class="text-center text-gray-400 pt-2">အကောင့်မရှိသေးဘူးလား?</p>
+                        <button type="button" onclick="handleAuth(event, true)" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-indigo-300 border border-indigo-500 bg-gray-800 hover:bg-gray-700 transition duration-150">
                             အကောင့်အသစ်ဖွင့်ရန် (Signup)
                         </button>
                     </form>
@@ -484,14 +534,14 @@
             `;
         }
 
-        // --- View 1: Home/Job Feed (Updated to call showJobPosterContacts) ---
+        // --- View 1: Home/Job Feed (Updated for Dark Mode and Image Zoom) ---
         function renderHome() {
-            contentDiv.innerHTML = '<h2 class="text-xl font-bold mb-4 text-gray-800">အလုပ်အကိုင်များ</h2>';
+            contentDiv.innerHTML = '<h2 class="text-xl font-bold mb-4 text-gray-100">အလုပ်အကိုင်များ</h2>';
             
             const jobsList = window.jobsList || [];
 
             if (jobsList.length === 0) {
-                contentDiv.innerHTML += '<p class="text-center text-gray-500 mt-10">လက်ရှိတွင် ခွင့်ပြုထားသော အလုပ်များ မရှိသေးပါ။</p>';
+                contentDiv.innerHTML += '<p class="text-center text-gray-400 mt-10">လက်ရှိတွင် ခွင့်ပြုထားသော အလုပ်များ မရှိသေးပါ။</p>';
                 return;
             }
 
@@ -499,28 +549,32 @@
                 const images = job.media?.images || [];
 
                 const imagePreviews = images.map((url, i) => `
-                    <img src="${url}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/9ca3af/ffffff?text=Image%20${i+1}'" alt="Job Image ${i+1}" class="w-full h-16 object-cover rounded-lg">
+                    <div class="relative">
+                        <img src="${url}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/4b5563/9ca3af?text=Image%20${i+1}'" 
+                             alt="Job Image ${i+1}" 
+                             class="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition duration-150"
+                             onclick="showImageZoomModal('${url}')">
+                        <div class="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded" title="Save Image">
+                            <button onclick="event.stopPropagation(); saveImage('${url}', '${job.title}_image_${i+1}')">💾</button>
+                        </div>
+                    </div>
                 `).join('') || '';
-                
-                const videoPreview = job.media?.video ? `<div class="bg-indigo-200 h-16 rounded-lg flex items-center justify-center text-xs text-indigo-700">Video (Link Available)</div>` : '';
-
 
                 const jobCard = `
-                    <div class="bg-gray-50 p-4 mb-4 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-semibold text-indigo-700">${job.title || 'အလုပ်အမည်မရှိ'}</h3>
-                        <p class="text-sm text-gray-600 mt-1"><strong>👤 တင်သူ:</strong> ${job.postedByName}</p>
-                        <p class="text-sm text-gray-600"><strong>📍 တည်နေရာ:</strong> ${job.location}</p>
-                        <p class="text-sm text-gray-600"><strong>💵 လစာ:</strong> ${job.salaryMin} - ${job.salaryMax} ဘတ်</p>
-                        <p class="text-sm text-gray-600 mb-2"><strong>💸 အလုပ်စမတ်ခ:</strong> ${job.smartFee || 0} ဘတ်</p>
+                    <div class="dark-card p-4 mb-4 rounded-xl shadow-sm border border-gray-700">
+                        <h3 class="text-lg font-semibold text-indigo-300">${job.title || 'အလုပ်အမည်မရှိ'}</h3>
+                        <p class="text-sm text-gray-400 mt-1"><strong>👤 တင်သူ:</strong> ${job.postedByName}</p>
+                        <p class="text-sm text-gray-400"><strong>📍 တည်နေရာ:</strong> ${job.location}</p>
+                        <p class="text-sm text-gray-400"><strong>💵 လစာ:</strong> ${job.salaryMin} - ${job.salaryMax} ဘတ်</p>
+                        <p class="text-sm text-gray-400 mb-2"><strong>💸 အလုပ်စမတ်ခ:</strong> ${job.smartFee || 0} ဘတ်</p>
                         
-                        ${job.description ? `<p class="text-gray-700 mt-2 whitespace-pre-wrap">${job.description.substring(0, 100)}${job.description.length > 100 ? '...' : ''}</p>` : ''}
+                        ${job.description ? `<p class="text-gray-300 mt-2 whitespace-pre-wrap">${job.description.substring(0, 100)}${job.description.length > 100 ? '...' : ''}</p>` : ''}
                         
                         <div class="grid grid-cols-3 gap-2 mt-3">
                             ${imagePreviews}
-                            ${videoPreview}
                         </div>
 
-                        <button onclick="showJobPosterContacts('${job.postedBy}', '${job.postedByName}')" class="mt-3 w-full bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-150">
+                        <button onclick="showJobPosterContacts('${job.postedBy}', '${job.postedByName}')" class="mt-3 w-full bg-indigo-700 text-white py-2 rounded-lg hover:bg-indigo-600 transition duration-150">
                             အလုပ်လျှောက်ရန်/ဆက်သွယ်ရန်
                         </button>
                     </div>
@@ -528,6 +582,63 @@
                 contentDiv.innerHTML += jobCard;
             });
         }
+
+        // NEW: Function to save image
+        window.saveImage = async function(imageUrl, filename) {
+            try {
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename || 'job_image.jpg';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                alertMessage('အောင်မြင်', 'ပုံကို သိမ်းဆည်းပြီးပါပြီ။', 'success');
+            } catch (error) {
+                logStatus(`Image Save Error: ${error.message}`, true);
+                alertMessage('အမှား', 'ပုံသိမ်း၍မရပါ။', 'error');
+            }
+        };
+
+        // NEW: Function to show image zoom modal
+        window.showImageZoomModal = function(imageUrl) {
+            const modalId = 'image-zoom-modal';
+            let modal = document.getElementById(modalId);
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 p-4 hidden';
+                modal.id = modalId;
+                document.body.appendChild(modal);
+            }
+            
+            const modalHtml = `
+                <div class="relative w-full max-w-4xl">
+                    <button onclick="document.getElementById('${modalId}').classList.add('hidden')"
+                            class="absolute top-4 right-4 text-white bg-red-600 hover:bg-red-700 rounded-full w-8 h-8 flex items-center justify-center z-10">
+                        ✕
+                    </button>
+                    <img src="${imageUrl}" class="w-full h-auto rounded-lg" alt="Zoomed Image">
+                    <div class="mt-4 flex justify-center space-x-4">
+                        <button onclick="saveImage('${imageUrl}', 'job_image_zoom')"
+                                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                            💾 Save Image
+                        </button>
+                    </div>
+                </div>
+            `;
+            modal.innerHTML = modalHtml;
+            modal.classList.remove('hidden');
+            
+            // Close modal when clicking outside image
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        };
 
         // NEW: Function to show poster's contact details
         window.showJobPosterContacts = function(posterId, posterName) {
@@ -541,35 +652,43 @@
             const phone = contact.thaiPhoneNumber || 'မဖော်ပြထားပါ';
             const fbLink = contact.facebookLink || '';
             const tgLink = contact.telegramLink || '';
+            const messengerLink = contact.messengerLink || ''; // NEW: Messenger link
 
             const content = `
                 <div class="space-y-4">
-                    <div class="p-3 bg-gray-50 rounded-lg">
-                        <p class="text-sm font-semibold text-gray-700">📞 ဖုန်းနံပါတ် (ထိုင်း):</p>
-                        <p class="text-lg font-bold text-indigo-600">${phone}</p>
+                    <div class="p-3 bg-gray-800 rounded-lg">
+                        <p class="text-sm font-semibold text-gray-300">📞 ဖုန်းနံပါတ်:</p>
+                        <p class="text-lg font-bold text-indigo-300">${phone}</p>
                     </div>
                     
-                    <div class="p-3 bg-gray-50 rounded-lg">
-                        <p class="text-sm font-semibold text-gray-700">📘 Facebook Link:</p>
+                    <div class="p-3 bg-gray-800 rounded-lg">
+                        <p class="text-sm font-semibold text-gray-300">💬 Messenger:</p>
+                        ${messengerLink 
+                            ? `<a href="${messengerLink}" target="_blank" class="text-blue-400 hover:text-blue-300 underline text-sm break-all">${messengerLink}</a>`
+                            : '<p class="text-gray-400 text-sm">မဖော်ပြထားပါ</p>'}
+                    </div>
+                    
+                    <div class="p-3 bg-gray-800 rounded-lg">
+                        <p class="text-sm font-semibold text-gray-300">📘 Facebook:</p>
                         ${fbLink 
-                            ? `<a href="${fbLink}" target="_blank" class="text-blue-500 hover:text-blue-700 underline text-sm break-all">${fbLink.substring(0, 40)}...</a>`
-                            : '<p class="text-gray-500 text-sm">မဖော်ပြထားပါ</p>'}
+                            ? `<a href="${fbLink}" target="_blank" class="text-blue-400 hover:text-blue-300 underline text-sm break-all">${fbLink}</a>`
+                            : '<p class="text-gray-400 text-sm">မဖော်ပြထားပါ</p>'}
                     </div>
 
-                    <div class="p-3 bg-gray-50 rounded-lg">
-                        <p class="text-sm font-semibold text-gray-700">💬 Telegram Link:</p>
+                    <div class="p-3 bg-gray-800 rounded-lg">
+                        <p class="text-sm font-semibold text-gray-300">✈️ Telegram:</p>
                         ${tgLink 
-                            ? `<a href="${tgLink}" target="_blank" class="text-blue-500 hover:text-blue-700 underline text-sm break-all">${tgLink.substring(0, 40)}...</a>`
-                            : '<p class="text-gray-500 text-sm">မဖော်ပြထားပါ</p>'}
+                            ? `<a href="${tgLink}" target="_blank" class="text-blue-400 hover:text-blue-300 underline text-sm break-all">${tgLink}</a>`
+                            : '<p class="text-gray-400 text-sm">မဖော်ပြထားပါ</p>'}
                     </div>
                 </div>
             `;
             
             showCustomModal(modalTitle, content, 'contact');
-        }
+        };
 
 
-        // --- View 2A: Registration/Profile (Updated for Approved User Edit Form) ---
+        // --- View 2A: Registration/Profile (Updated with Messenger Link) ---
         
         window.handleProfileFileChange = function(event, type) {
             const file = event.target.files[0];
@@ -597,31 +716,47 @@
             let formContent;
 
             if (!user || !user.status || user.status === 'denied') {
-                statusBadge = '<span class="px-3 py-1 bg-red-100 text-red-700 rounded-full font-medium">❌ မှတ်ပုံတင်ရန် လိုအပ်သည်</span>';
+                statusBadge = '<span class="px-3 py-1 bg-red-900 text-red-300 rounded-full font-medium">❌ မှတ်ပုံတင်ရန် လိုအပ်သည်</span>';
                 formContent = renderProfileSubmissionForm();
             } else if (user.status === 'pending') {
-                statusBadge = '<span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">⏳ Admin ခွင့်ပြုချက် စောင့်ဆိုင်းနေပါသည်</span>';
+                statusBadge = '<span class="px-3 py-1 bg-yellow-900 text-yellow-300 rounded-full font-medium">⏳ Admin ခွင့်ပြုချက် စောင့်ဆိုင်းနေပါသည်</span>';
                 formContent = `
-                    <p class="mt-4 text-center text-gray-600">သင်၏ အချက်အလက်များ တင်သွင်းပြီးပါပြီ။ Admin မှ စစ်ဆေးနေပါသည်။</p>
-                    <p class="text-xs text-center text-gray-400 mt-2">ခွင့်ပြုပြီးပါက အလုပ်တင်ခွင့် ရပါမည်။</p>
+                    <p class="mt-4 text-center text-gray-400">သင်၏ အချက်အလက်များ တင်သွင်းပြီးပါပြီ။ Admin မှ စစ်ဆေးနေပါသည်။</p>
+                    <p class="text-xs text-center text-gray-500 mt-2">ခွင့်ပြုပြီးပါက အလုပ်တင်ခွင့် ရပါမည်။</p>
                 `;
             } else { // approved
-                statusBadge = '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-full font-medium">✅ အလုပ်တင်ရန် ခွင့်ပြုပြီး</span>';
+                statusBadge = '<span class="px-3 py-1 bg-green-900 text-green-300 rounded-full font-medium">✅ အလုပ်တင်ရန် ခွင့်ပြုပြီး</span>';
                 
                 // Show uploaded images if available
-                const passportImg = user.passportPhotoUrl ? `<img src="${user.passportPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/9ca3af/ffffff?text=Passport%20Photo'" alt="Passport Photo" class="w-full h-20 object-cover rounded-lg">` : '<div class="h-20 flex items-center justify-center text-xs text-gray-500">ပတ်စပို့ ဓာတ်ပုံ မရှိပါ</div>';
-                const userImg = user.userPhotoUrl ? `<img src="${user.userPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/9ca3af/ffffff?text=User%20Photo'" alt="User Photo" class="w-full h-20 object-cover rounded-lg">` : '<div class="h-20 flex items-center justify-center text-xs text-gray-500">လူ ဓာတ်ပုံ မရှိပါ</div>';
-
+                const passportImg = user.passportPhotoUrl ? `
+                    <div class="relative">
+                        <img src="${user.passportPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/4b5563/9ca3af?text=Passport%20Photo'" 
+                             alt="Passport Photo" class="w-full h-20 object-cover rounded-lg cursor-pointer"
+                             onclick="showImageZoomModal('${user.passportPhotoUrl}')">
+                        <div class="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                            <button onclick="event.stopPropagation(); saveImage('${user.passportPhotoUrl}', 'passport_photo')">💾</button>
+                        </div>
+                    </div>` : '<div class="h-20 flex items-center justify-center text-xs text-gray-500">ပတ်စပို့ ဓာတ်ပုံ မရှိပါ</div>';
+                
+                const userImg = user.userPhotoUrl ? `
+                    <div class="relative">
+                        <img src="${user.userPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/4b5563/9ca3af?text=User%20Photo'" 
+                             alt="User Photo" class="w-full h-20 object-cover rounded-lg cursor-pointer"
+                             onclick="showImageZoomModal('${user.userPhotoUrl}')">
+                        <div class="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                            <button onclick="event.stopPropagation(); saveImage('${user.userPhotoUrl}', 'user_photo')">💾</button>
+                        </div>
+                    </div>` : '<div class="h-20 flex items-center justify-center text-xs text-gray-500">လူ ဓာတ်ပုံ မရှိပါ</div>';
 
                 formContent = `
-                    <div class="space-y-4 mb-6 pb-4 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-800">ကိုယ်ရေးအချက်အလက် (ဖတ်ရန်သာ)</h3>
-                        <p class="text-gray-700"><strong>အီးမေးလ်:</strong> ${currentUserEmail}</p>
-                        <p class="text-gray-700"><strong>နာမည် (Passport):</strong> ${user.passportName}</p>
-                        <p class="text-gray-700"><strong>နေရပ်လိပ်စာ:</strong> ${user.address}</p>
+                    <div class="space-y-4 mb-6 pb-4 border-b border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-200">ကိုယ်ရေးအချက်အလက် (ဖတ်ရန်သာ)</h3>
+                        <p class="text-gray-300"><strong>အီးမေးလ်:</strong> ${currentUserEmail}</p>
+                        <p class="text-gray-300"><strong>နာမည် (Passport):</strong> ${user.passportName}</p>
+                        <p class="text-gray-300"><strong>နေရပ်လိပ်စာ:</strong> ${user.address}</p>
                         <div class="grid grid-cols-2 gap-4 pt-2">
-                            <div class="text-center bg-gray-200 p-3 rounded-lg text-sm">${passportImg}</div>
-                            <div class="text-center bg-gray-200 p-3 rounded-lg text-sm">${userImg}</div>
+                            <div class="text-center bg-gray-800 p-3 rounded-lg text-sm">${passportImg}</div>
+                            <div class="text-center bg-gray-800 p-3 rounded-lg text-sm">${userImg}</div>
                         </div>
                     </div>
                     
@@ -631,10 +766,10 @@
             }
 
             contentDiv.innerHTML = `
-                <h2 class="text-xl font-bold mb-4 text-gray-800">ပရိုဖိုင် အခြေအနေ</h2>
-                <div class="bg-white p-6 rounded-xl shadow-md">
+                <h2 class="text-xl font-bold mb-4 text-gray-100">ပရိုဖိုင် အခြေအနေ</h2>
+                <div class="dark-card p-6 rounded-xl shadow-md">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold">အကောင့် အခြေအနေ:</h3>
+                        <h3 class="text-lg font-semibold text-gray-200">အကောင့် အခြေအနေ:</h3>
                         ${statusBadge}
                     </div>
                     ${formContent}
@@ -642,54 +777,59 @@
             `;
         }
         
-        // Helper function to render the initial profile submission form (Updated with links)
+        // Helper function to render the initial profile submission form (Updated with Messenger link)
         function renderProfileSubmissionForm() {
             return `
-                <p class="text-sm text-gray-600 mt-4 mb-4">အလုပ်တင်ခွင့်ရရှိရန် အောက်ပါ အချက်အလက်များကို ဖြည့်စွက်၍ Admin ထံ ခွင့်ပြုချက် တင်သွင်းရပါမည်။</p>
+                <p class="text-sm text-gray-400 mt-4 mb-4">အလုပ်တင်ခွင့်ရရှိရန် အောက်ပါ အချက်အလက်များကို ဖြည့်စွက်၍ Admin ထံ ခွင့်ပြုချက် တင်သွင်းရပါမည်။</p>
                 <form id="profile-form" class="space-y-4 mt-6" onsubmit="submitProfile(event)">
                     <!-- Passport Name -->
                     <div>
-                        <label for="passport-name" class="block text-sm font-medium text-gray-700">နာမည် (ပတ်စပို့နာမည်)</label>
-                        <input type="text" id="passport-name" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" value="${currentUserProfile?.passportName || ''}">
+                        <label for="passport-name" class="block text-sm font-medium text-gray-300">နာမည် (ပတ်စပို့နာမည်)</label>
+                        <input type="text" id="passport-name" required class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" value="${currentUserProfile?.passportName || ''}">
                     </div>
                     <!-- Phone Number -->
                     <div>
-                        <label for="phone-number" class="block text-sm font-medium text-gray-700">ဖုန်းနံပါတ် (ထိုင်း - ဆက်သွယ်ရန်)</label>
-                        <input type="tel" id="phone-number" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" value="${currentUserProfile?.thaiPhoneNumber || ''}">
+                        <label for="phone-number" class="block text-sm font-medium text-gray-300">ဖုန်းနံပါတ် (ဆက်သွယ်ရန်)</label>
+                        <input type="tel" id="phone-number" required class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" value="${currentUserProfile?.thaiPhoneNumber || '0926458647'}">
+                    </div>
+                    <!-- Messenger Link -->
+                    <div>
+                        <label for="messenger-link" class="block text-sm font-medium text-gray-300">Messenger Link</label>
+                        <input type="url" id="messenger-link" class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://messenger.com/waiyan" value="${currentUserProfile?.messengerLink || 'https://messenger.com/waiyan'}">
                     </div>
                     <!-- Facebook Link -->
                     <div>
-                        <label for="facebook-link" class="block text-sm font-medium text-gray-700">Facebook Link (optional)</label>
-                        <input type="url" id="facebook-link" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://www.facebook.com/..." value="${currentUserProfile?.facebookLink || ''}">
+                        <label for="facebook-link" class="block text-sm font-medium text-gray-300">Facebook Link</label>
+                        <input type="url" id="facebook-link" class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://www.facebook.com/..." value="${currentUserProfile?.facebookLink || ''}">
                     </div>
                     <!-- Telegram Link -->
                     <div>
-                        <label for="telegram-link" class="block text-sm font-medium text-gray-700">Telegram Link (optional)</label>
-                        <input type="url" id="telegram-link" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://t.me/username or @username" value="${currentUserProfile?.telegramLink || ''}">
+                        <label for="telegram-link" class="block text-sm font-medium text-gray-300">Telegram Link</label>
+                        <input type="url" id="telegram-link" class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://t.me/username or @username" value="${currentUserProfile?.telegramLink || 'https://t.me/@waiyan'}">
                     </div>
                     <!-- Address -->
                     <div>
-                        <label for="address" class="block text-sm font-medium text-gray-700">နေရပ်လိပ်စာ</label>
-                        <textarea id="address" rows="2" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">${currentUserProfile?.address || ''}</textarea>
+                        <label for="address" class="block text-sm font-medium text-gray-300">နေရပ်လိပ်စာ</label>
+                        <textarea id="address" rows="2" required class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">${currentUserProfile?.address || ''}</textarea>
                     </div>
                     <!-- Photo Uploads (Real Upload) -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label for="passport-file" class="block text-sm font-medium text-gray-700 mb-1">ပတ်စပို့ဓာတ်ပုံ</label>
+                            <label for="passport-file" class="block text-sm font-medium text-gray-300 mb-1">ပတ်စပို့ဓာတ်ပုံ</label>
                             <input type="file" id="passport-file" accept="image/*" required 
                                 onchange="handleProfileFileChange(event, 'passport')" 
-                                class="w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-1">
-                            <p id="passport-file-status" class="text-xs text-gray-500 mt-1 text-indigo-600"></p>
+                                class="w-full text-sm text-gray-400 border border-gray-600 rounded-lg p-1 bg-gray-800">
+                            <p id="passport-file-status" class="text-xs text-gray-400 mt-1 text-indigo-400"></p>
                         </div>
                         <div>
-                            <label for="user-photo-file" class="block text-sm font-medium text-gray-700 mb-1">လူ ဓာတ်ပုံ</label>
+                            <label for="user-photo-file" class="block text-sm font-medium text-gray-300 mb-1">လူ ဓာတ်ပုံ</label>
                             <input type="file" id="user-photo-file" accept="image/*" required 
                                 onchange="handleProfileFileChange(event, 'user_photo')" 
-                                class="w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-1">
-                            <p id="user-photo-file-status" class="text-xs text-gray-500 mt-1 text-indigo-600"></p>
+                                class="w-full text-sm text-gray-400 border border-gray-600 rounded-lg p-1 bg-gray-800">
+                            <p id="user-photo-file-status" class="text-xs text-gray-400 mt-1 text-indigo-400"></p>
                         </div>
                     </div>
-                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-4">
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-700 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-4">
                         Admin ခွင့်ပြုချက်အတွက် အချက်အလက် ပို့ရန်
                     </button>
                 </form>
@@ -699,26 +839,31 @@
         // NEW: Helper function to render the contact edit form for approved users
         function renderContactEditForm(user) {
             return `
-                <div class="space-y-4 mb-6 pt-4 border-t border-gray-200">
-                    <h3 class="text-lg font-semibold text-indigo-700">ဆက်သွယ်ရန် အချက်အလက် ပြင်ဆင်ရန်</h3>
-                    <p class="text-sm text-gray-600">ဤအချက်အလက်များသည် သင်တင်သော အလုပ်များတွင် အများပြည်သူမြင်နိုင်မည်ဖြစ်ပါသည်။</p>
+                <div class="space-y-4 mb-6 pt-4 border-t border-gray-700">
+                    <h3 class="text-lg font-semibold text-indigo-300">ဆက်သွယ်ရန် အချက်အလက် ပြင်ဆင်ရန်</h3>
+                    <p class="text-sm text-gray-400">ဤအချက်အလက်များသည် သင်တင်သော အလုပ်များတွင် အများပြည်သူမြင်နိုင်မည်ဖြစ်ပါသည်။</p>
                     <form id="contact-edit-form" class="space-y-4" onsubmit="updateContactInfo(event)">
                         <!-- Phone Number -->
                         <div>
-                            <label for="edit-phone-number" class="block text-sm font-medium text-gray-700">ဖုန်းနံပါတ် (ထိုင်း - ဆက်သွယ်ရန်)</label>
-                            <input type="tel" id="edit-phone-number" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" value="${user.thaiPhoneNumber || ''}">
+                            <label for="edit-phone-number" class="block text-sm font-medium text-gray-300">ဖုန်းနံပါတ် (ဆက်သွယ်ရန်)</label>
+                            <input type="tel" id="edit-phone-number" required class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" value="${user.thaiPhoneNumber || '0926458647'}">
+                        </div>
+                        <!-- Messenger Link -->
+                        <div>
+                            <label for="edit-messenger-link" class="block text-sm font-medium text-gray-300">Messenger Link</label>
+                            <input type="url" id="edit-messenger-link" class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://messenger.com/waiyan" value="${user.messengerLink || 'https://messenger.com/waiyan'}">
                         </div>
                         <!-- Facebook Link -->
                         <div>
-                            <label for="edit-facebook-link" class="block text-sm font-medium text-gray-700">Facebook Link (optional)</label>
-                            <input type="url" id="edit-facebook-link" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://www.facebook.com/..." value="${user.facebookLink || ''}">
+                            <label for="edit-facebook-link" class="block text-sm font-medium text-gray-300">Facebook Link</label>
+                            <input type="url" id="edit-facebook-link" class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://www.facebook.com/..." value="${user.facebookLink || ''}">
                         </div>
                         <!-- Telegram Link -->
                         <div>
-                            <label for="edit-telegram-link" class="block text-sm font-medium text-gray-700">Telegram Link (optional)</label>
-                            <input type="url" id="edit-telegram-link" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://t.me/username or @username" value="${user.telegramLink || ''}">
+                            <label for="edit-telegram-link" class="block text-sm font-medium text-gray-300">Telegram Link</label>
+                            <input type="url" id="edit-telegram-link" class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="https://t.me/username or @username" value="${user.telegramLink || 'https://t.me/@waiyan'}">
                         </div>
-                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-4">
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-700 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-4">
                             အချက်အလက် ပြင်ဆင်ရန်
                         </button>
                     </form>
@@ -732,6 +877,7 @@
             if (!currentUserId || !db) return alertMessage('အမှား', 'စနစ်ကို စတင်၍ မရသေးပါ။', 'error');
 
             const phoneNumber = document.getElementById('edit-phone-number').value.trim();
+            const messengerLink = document.getElementById('edit-messenger-link').value.trim();
             const facebookLink = document.getElementById('edit-facebook-link').value.trim();
             const telegramLink = document.getElementById('edit-telegram-link').value.trim();
 
@@ -744,6 +890,7 @@
                 
                 const updateData = {
                     thaiPhoneNumber: phoneNumber,
+                    messengerLink: messengerLink,
                     facebookLink: facebookLink,
                     telegramLink: telegramLink,
                     lastUpdated: Date.now()
@@ -755,7 +902,7 @@
                 
                 // 2. Save/Update Public Contact Collection (for job seekers)
                 const publicContactRef = doc(db, `artifacts/${appId}/public/data/public_contacts`, currentUserId); 
-                await setDoc(publicContactRef, updateData, { merge: true }); // Use setDoc with merge to ensure creation if missing
+                await setDoc(publicContactRef, updateData, { merge: true });
                 
                 hideLoading();
                 alertMessage('ပြင်ဆင်မှု အောင်မြင်ပါသည်', 'ဆက်သွယ်ရန် အချက်အလက်များကို အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ။', 'success');
@@ -773,6 +920,7 @@
 
             const passportName = document.getElementById('passport-name').value;
             const phoneNumber = document.getElementById('phone-number').value.trim();
+            const messengerLink = document.getElementById('messenger-link').value.trim();
             const facebookLink = document.getElementById('facebook-link').value.trim();
             const telegramLink = document.getElementById('telegram-link').value.trim();
             const address = document.getElementById('address').value;
@@ -795,6 +943,7 @@
                 const profileData = {
                     passportName: passportName,
                     thaiPhoneNumber: phoneNumber,
+                    messengerLink: messengerLink,
                     facebookLink: facebookLink,
                     telegramLink: telegramLink,
                     address: address,
@@ -827,78 +976,118 @@
             }
         }
         
-        // Helper function to render the user's posted jobs (No change)
+        // Helper function to render the user's posted jobs (Updated for Dark Mode)
         function renderMyPostedJobs() {
-            let jobsHtml = `<h3 class="text-lg font-semibold text-gray-800 mb-3 pt-4 border-t border-gray-200">သင့်မှ တင်ထားသော အလုပ်များ (${myPostedJobsList.length} ခု)</h3>`;
+            let jobsHtml = `<h3 class="text-lg font-semibold text-gray-200 mb-3 pt-4 border-t border-gray-700">သင့်မှ တင်ထားသော အလုပ်များ (${myPostedJobsList.length} ခု)</h3>`;
             
             if (myPostedJobsList.length === 0) {
-                jobsHtml += '<p class="text-center text-gray-500 p-4 bg-gray-50 rounded-lg">သင် တင်ထားသော အလုပ်များ မရှိသေးပါ။</p>';
+                jobsHtml += '<p class="text-center text-gray-400 p-4 bg-gray-800 rounded-lg">သင် တင်ထားသော အလုပ်များ မရှိသေးပါ။</p>';
                 return jobsHtml;
             }
 
             myPostedJobsList.forEach(job => {
                  jobsHtml += `
-                    <div class="bg-white p-3 mb-2 rounded-lg border border-indigo-100 shadow-sm">
-                        <h4 class="font-semibold text-indigo-700">${job.title}</h4>
-                        <p class="text-xs text-gray-600"><strong>📍 တည်နေရာ:</strong> ${job.location}</p>
-                        <p class="text-xs text-gray-600"><strong>💵 လစာ:</strong> ${job.salaryMin} - ${job.salaryMax} ဘတ်</p>
-                        <p class="text-xs text-gray-600"><strong>💸 စမတ်ခ:</strong> ${job.smartFee || 0} ဘတ်</p>
+                    <div class="bg-gray-800 p-3 mb-2 rounded-lg border border-indigo-800 shadow-sm">
+                        <h4 class="font-semibold text-indigo-300">${job.title}</h4>
+                        <p class="text-xs text-gray-400"><strong>📍 တည်နေရာ:</strong> ${job.location}</p>
+                        <p class="text-xs text-gray-400"><strong>💵 လစာ:</strong> ${job.salaryMin} - ${job.salaryMax} ဘတ်</p>
+                        <p class="text-xs text-gray-400"><strong>💸 စမတ်ခ:</strong> ${job.smartFee || 0} ဘတ်</p>
                     </div>
                 `;
             });
             return jobsHtml;
         }
 
-        // --- View 2B: Admin Panel (Updated to reflect new fields) ---
+        // --- View 2B: Admin Panel (Updated with Approved Users List and Image Save) ---
         function renderAdminPanel() {
             contentDiv.innerHTML = `
-                <h2 class="text-xl font-bold mb-4 text-gray-800">Admin Panel</h2>
-                <p class="mb-6 text-sm text-gray-600">အီးမေးလ်: ${ADMIN_EMAIL}</p>
+                <h2 class="text-xl font-bold mb-4 text-gray-100">Admin Panel</h2>
+                <p class="mb-6 text-sm text-gray-400">အီးမေးလ်: ${ADMIN_EMAIL}</p>
                 
-                <!-- Send Notification Section (No change) -->
-                <div class="bg-indigo-50 p-4 rounded-xl shadow-inner mb-6">
-                    <h3 class="text-lg font-semibold text-indigo-700 mb-3 border-b border-indigo-200 pb-2">သတိပေးချက် အားလုံးသို့ ပို့ရန်</h3>
+                <!-- Send Notification Section -->
+                <div class="bg-indigo-900 bg-opacity-30 p-4 rounded-xl shadow-inner mb-6">
+                    <h3 class="text-lg font-semibold text-indigo-300 mb-3 border-b border-indigo-700 pb-2">သတိပေးချက် အားလုံးသို့ ပို့ရန်</h3>
                     <form id="send-notification-form" class="space-y-3" onsubmit="sendNotification(event)">
                         <div>
-                            <label for="notification-title" class="block text-sm font-medium text-gray-700">ခေါင်းစဉ်</label>
-                            <input type="text" id="notification-title" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="ဥပမာ။ အရေးပေါ် အသိပေးချက်">
+                            <label for="notification-title" class="block text-sm font-medium text-gray-300">ခေါင်းစဉ်</label>
+                            <input type="text" id="notification-title" required class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="ဥပမာ။ အရေးပေါ် အသိပေးချက်">
                         </div>
                         <div>
-                            <label for="notification-content" class="block text-sm font-medium text-gray-700">စာသား</label>
-                            <textarea id="notification-content" rows="3" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="အများပြည်သူသို့ ပေးပို့လိုသော စာသား"></textarea>
+                            <label for="notification-content" class="block text-sm font-medium text-gray-300">စာသား</label>
+                            <textarea id="notification-content" rows="3" required class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" placeholder="အများပြည်သူသို့ ပေးပို့လိုသော စာသား"></textarea>
                         </div>
-                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150">
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-700 hover:bg-indigo-600 transition duration-150">
                             သတိပေးချက် ပို့ရန်
                         </button>
                     </form>
                 </div>
 
+                <!-- Approved Users Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-green-400 mb-3 border-b border-gray-700 pb-2">ခွင့်ပြုထားသော User များ (${approvedUsersList.length} ဦး)</h3>
+                    ${approvedUsersList.length === 0 ? '<p class="text-center text-gray-400 mt-4 p-4 bg-gray-800 rounded-lg">ခွင့်ပြုထားသော User မရှိသေးပါ။</p>' : ''}
+                    <div id="approved-users-list" class="space-y-2"></div>
+                </div>
+
                 <!-- User Approval Section -->
-                <h3 class="text-lg font-semibold text-red-700 mb-3 border-b border-gray-200 pb-2">User ခွင့်ပြုချက် (Pending: ${pendingUsersList.length} ဦး)</h3>
+                <h3 class="text-lg font-semibold text-yellow-400 mb-3 border-b border-gray-700 pb-2">User ခွင့်ပြုချက် (Pending: ${pendingUsersList.length} ဦး)</h3>
             `;
 
+            // Render approved users list
+            const approvedListDiv = document.getElementById('approved-users-list');
+            if (approvedListDiv) {
+                approvedUsersList.forEach(user => {
+                    const userCard = `
+                        <div class="bg-green-900 bg-opacity-30 p-3 rounded-lg border border-green-700 shadow-sm cursor-pointer hover:bg-green-900 hover:bg-opacity-50 transition duration-150"
+                             onclick="showUserDetails('${user.uid}')">
+                            <p class="font-bold text-gray-200">${user.passportName || user.email || 'အမည်မဖော်ပြထားပါ'}</p>
+                            <p class="text-xs text-gray-400">${user.email}</p>
+                        </div>
+                    `;
+                    approvedListDiv.innerHTML += userCard;
+                });
+            }
+
             if (pendingUsersList.length === 0) {
-                contentDiv.innerHTML += '<p class="text-center text-gray-500 mt-4 p-4 bg-green-50 rounded-lg">ခွင့်ပြုရန် စောင့်ဆိုင်းနေသော User မရှိပါ။</p>';
+                contentDiv.innerHTML += '<p class="text-center text-gray-400 mt-4 p-4 bg-gray-800 rounded-lg">ခွင့်ပြုရန် စောင့်ဆိုင်းနေသော User မရှိပါ။</p>';
                 return;
             }
 
             pendingUsersList.forEach(user => {
                 const userCard = `
-                    <div class="bg-yellow-50 p-4 mb-3 rounded-lg border border-yellow-200 shadow-sm">
-                        <p class="font-bold text-gray-800">${user.passportName || 'အမည်မဖော်ပြထားပါ'}</p>
-                        <p class="text-sm text-gray-700"><strong>အီးမေးလ်:</strong> ${user.email}</p>
-                        <p class="text-sm text-gray-700"><strong>UID:</strong> ${user.uid.substring(0, 8)}...</p>
-                        <p class="text-sm text-gray-700"><strong>ဖုန်း:</strong> ${user.thaiPhoneNumber}</p>
-                        <p class="text-sm text-gray-700"><strong>FB:</strong> ${user.facebookLink || 'မရှိပါ'}</p>
-                        <p class="text-sm text-gray-700"><strong>TG:</strong> ${user.telegramLink || 'မရှိပါ'}</p>
-                        <p class="text-sm text-gray-700 mb-2"><strong>လိပ်စာ:</strong> ${user.address}</p>
+                    <div class="bg-yellow-900 bg-opacity-30 p-4 mb-3 rounded-lg border border-yellow-700 shadow-sm">
+                        <p class="font-bold text-gray-200">${user.passportName || 'အမည်မဖော်ပြထားပါ'}</p>
+                        <p class="text-sm text-gray-400"><strong>အီးမေးလ်:</strong> ${user.email}</p>
+                        <p class="text-sm text-gray-400"><strong>UID:</strong> ${user.uid.substring(0, 8)}...</p>
+                        <p class="text-sm text-gray-400"><strong>ဖုန်း:</strong> ${user.thaiPhoneNumber}</p>
+                        <p class="text-sm text-gray-400"><strong>Messenger:</strong> ${user.messengerLink || 'မရှိပါ'}</p>
+                        <p class="text-sm text-gray-400"><strong>FB:</strong> ${user.facebookLink || 'မရှိပါ'}</p>
+                        <p class="text-sm text-gray-400"><strong>TG:</strong> ${user.telegramLink || 'မရှိပါ'}</p>
+                        <p class="text-sm text-gray-400 mb-2"><strong>လိပ်စာ:</strong> ${user.address}</p>
                         
                         <div class="grid grid-cols-2 gap-4 pt-2 mb-3">
-                            ${user.passportPhotoUrl ? `<img src="${user.passportPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/9ca3af/ffffff?text=Passport%20Photo'" alt="Passport Photo" class="w-full h-16 object-cover rounded-lg">` : '<div class="text-center text-xs text-gray-500 bg-gray-200 p-2 rounded-lg">Passport Photo N/A</div>'}
-                            ${user.userPhotoUrl ? `<img src="${user.userPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/9ca3af/ffffff?text=User%20Photo'" alt="User Photo" class="w-full h-16 object-cover rounded-lg">` : '<div class="text-center text-xs text-gray-500 bg-gray-200 p-2 rounded-lg">User Photo N/A</div>'}
+                            ${user.passportPhotoUrl ? `
+                                <div class="relative">
+                                    <img src="${user.passportPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/4b5563/9ca3af?text=Passport%20Photo'" 
+                                         alt="Passport Photo" class="w-full h-16 object-cover rounded-lg cursor-pointer"
+                                         onclick="showImageZoomModal('${user.passportPhotoUrl}')">
+                                    <div class="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                                        <button onclick="event.stopPropagation(); saveImage('${user.passportPhotoUrl}', '${user.passportName || 'user'}_passport')">💾</button>
+                                    </div>
+                                </div>` : '<div class="text-center text-xs text-gray-500 bg-gray-800 p-2 rounded-lg">Passport Photo N/A</div>'}
+                            
+                            ${user.userPhotoUrl ? `
+                                <div class="relative">
+                                    <img src="${user.userPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/4b5563/9ca3af?text=User%20Photo'" 
+                                         alt="User Photo" class="w-full h-16 object-cover rounded-lg cursor-pointer"
+                                         onclick="showImageZoomModal('${user.userPhotoUrl}')">
+                                    <div class="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                                        <button onclick="event.stopPropagation(); saveImage('${user.userPhotoUrl}', '${user.passportName || 'user'}_photo')">💾</button>
+                                    </div>
+                                </div>` : '<div class="text-center text-xs text-gray-500 bg-gray-800 p-2 rounded-lg">User Photo N/A</div>'}
                         </div>
 
-                        <button onclick="approveUser('${user.uid}')" class="w-full bg-green-600 text-white py-2 rounded-lg text-sm hover:bg-green-700 transition duration-150 mt-2">
+                        <button onclick="approveUser('${user.uid}')" class="w-full bg-green-700 text-white py-2 rounded-lg text-sm hover:bg-green-600 transition duration-150 mt-2">
                             ဤ User ကို ခွင့်ပြုရန်
                         </button>
                     </div>
@@ -906,6 +1095,76 @@
                 contentDiv.innerHTML += userCard;
             });
         }
+
+        // NEW: Function to show user details in modal
+        window.showUserDetails = async function(userId) {
+            try {
+                // Fetch user profile
+                const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
+                const userSnap = await getDoc(userDocRef);
+                
+                if (!userSnap.exists()) {
+                    return alertMessage('အမှား', 'User အချက်အလက်များကို ရှာမတွေ့ပါ။', 'error');
+                }
+                
+                const user = userSnap.data();
+                
+                const content = `
+                    <div class="space-y-4">
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-300">👤 နာမည်:</p>
+                            <p class="text-lg font-bold text-indigo-300">${user.passportName || 'မဖော်ပြထားပါ'}</p>
+                        </div>
+                        
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-300">📧 အီးမေးလ်:</p>
+                            <p class="text-lg text-gray-200">${user.email || 'မဖော်ပြထားပါ'}</p>
+                        </div>
+                        
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-300">📞 ဖုန်းနံပါတ်:</p>
+                            <p class="text-lg text-gray-200">${user.thaiPhoneNumber || 'မဖော်ပြထားပါ'}</p>
+                        </div>
+                        
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-300">💬 Messenger:</p>
+                            ${user.messengerLink 
+                                ? `<a href="${user.messengerLink}" target="_blank" class="text-blue-400 hover:text-blue-300 underline text-sm break-all">${user.messengerLink}</a>`
+                                : '<p class="text-gray-400 text-sm">မဖော်ပြထားပါ</p>'}
+                        </div>
+                        
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-300">📘 Facebook:</p>
+                            ${user.facebookLink 
+                                ? `<a href="${user.facebookLink}" target="_blank" class="text-blue-400 hover:text-blue-300 underline text-sm break-all">${user.facebookLink}</a>`
+                                : '<p class="text-gray-400 text-sm">မဖော်ပြထားပါ</p>'}
+                        </div>
+                        
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-300">✈️ Telegram:</p>
+                            ${user.telegramLink 
+                                ? `<a href="${user.telegramLink}" target="_blank" class="text-blue-400 hover:text-blue-300 underline text-sm break-all">${user.telegramLink}</a>`
+                                : '<p class="text-gray-400 text-sm">မဖော်ပြထားပါ</p>'}
+                        </div>
+                        
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-300">🏠 လိပ်စာ:</p>
+                            <p class="text-gray-200">${user.address || 'မဖော်ပြထားပါ'}</p>
+                        </div>
+                        
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-300">🕐 ခွင့်ပြုချိန်:</p>
+                            <p class="text-gray-200">${user.timestamp ? new Date(user.timestamp).toLocaleString('my-MM') : 'မဖော်ပြထားပါ'}</p>
+                        </div>
+                    </div>
+                `;
+                
+                showCustomModal('User အချက်အလက် အားလုံး', content, 'user');
+            } catch (error) {
+                logStatus(`Show User Details Error: ${error.message}`, true);
+                alertMessage('အမှား', 'User အချက်အလက်များကို ဖော်ပြ၍မရပါ။', 'error');
+            }
+        };
 
         window.sendNotification = async function(event) {
             event.preventDefault();
@@ -938,7 +1197,7 @@
         window.approveUser = async function(userIdToApprove) {
             if (!isUserAdmin || !db) return alertMessage('အမှား', 'Admin အဖြစ် ဝင်ရောက်ထားရပါမည်။', 'error');
             
-            // Fetch the user's current pending data (includes phone, fb, tg, etc.)
+            // Fetch the user's current pending data (includes phone, messenger, fb, tg, etc.)
             const pendingDocRef = doc(db, `artifacts/${appId}/public/data/pending_profiles`, userIdToApprove);
             const pendingSnap = await getDoc(pendingDocRef);
             
@@ -951,12 +1210,23 @@
             try {
                 // 1. Update the user's private profile status
                 const userDocRef = doc(db, `artifacts/${appId}/users/${userIdToApprove}/profile/data`);
-                await updateDoc(userDocRef, { status: 'approved' });
+                await updateDoc(userDocRef, { 
+                    status: 'approved',
+                    thaiPhoneNumber: userData.thaiPhoneNumber,
+                    messengerLink: userData.messengerLink,
+                    facebookLink: userData.facebookLink,
+                    telegramLink: userData.telegramLink,
+                    address: userData.address,
+                    passportName: userData.passportName,
+                    passportPhotoUrl: userData.passportPhotoUrl,
+                    userPhotoUrl: userData.userPhotoUrl
+                });
                 
-                // 2. NEW: Save Public Contact Info for job seekers (use data from pending profile)
+                // 2. Save Public Contact Info for job seekers (use data from pending profile)
                 const publicContactRef = doc(db, `artifacts/${appId}/public/data/public_contacts`, userIdToApprove);
                 await setDoc(publicContactRef, {
                     thaiPhoneNumber: userData.thaiPhoneNumber || '',
+                    messengerLink: userData.messengerLink || '',
                     facebookLink: userData.facebookLink || '',
                     telegramLink: userData.telegramLink || ''
                 });
@@ -964,19 +1234,28 @@
                 // 3. Delete the public pending profile document
                 await deleteDoc(pendingDocRef);
                 
+                // Refresh approved users list
+                approvedUsersList = approvedUsersList.filter(u => u.uid !== userIdToApprove);
+                approvedUsersList.push({
+                    uid: userIdToApprove,
+                    ...userData,
+                    status: 'approved'
+                });
+                
                 alertMessage('ခွင့်ပြုချက် အောင်မြင်', `User ID: ${userIdToApprove.substring(0, 8)} ကို အောင်မြင်စွာ ခွင့်ပြုလိုက်ပါပြီ။`, 'success');
+                renderAdminPanel(); // Refresh admin panel
             } catch (error) {
                 logStatus(`Admin Approval Error: ${error.message}`, true);
                 alertMessage('အမှား', `ခွင့်ပြုချက် ပေး၍ မရပါ။: ${error.message}`, 'error');
             }
         }
         
-        // --- View 4: Notifications Inbox (No change) ---
+        // --- View 4: Notifications Inbox (Updated for Dark Mode) ---
         
         function renderNotifications() {
             contentDiv.innerHTML = `
-                <h2 class="text-xl font-bold mb-4 text-gray-800">သတိပေးချက်များ (Admin မှ ပေးပို့သည်)</h2>
-                ${window.notificationsList && window.notificationsList.length > 0 ? '' : '<p class="text-center text-gray-500 mt-10 p-4 bg-gray-100 rounded-lg">လက်ခံရရှိထားသော သတိပေးချက်များ မရှိသေးပါ။</p>'}
+                <h2 class="text-xl font-bold mb-4 text-gray-100">သတိပေးချက်များ (Admin မှ ပေးပို့သည်)</h2>
+                ${window.notificationsList && window.notificationsList.length > 0 ? '' : '<p class="text-center text-gray-400 mt-10 p-4 bg-gray-800 rounded-lg">လက်ခံရရှိထားသော သတိပေးချက်များ မရှိသေးပါ။</p>'}
                 <div id="notifications-list" class="space-y-4"></div>
             `;
             
@@ -989,13 +1268,13 @@
                     });
                     
                     const notiCard = `
-                        <div class="bg-white p-4 rounded-xl shadow-md border border-indigo-100">
-                            <h3 class="text-lg font-semibold text-indigo-700">${noti.title}</h3>
+                        <div class="dark-card p-4 rounded-xl shadow-md border border-indigo-800">
+                            <h3 class="text-lg font-semibold text-indigo-300">${noti.title}</h3>
                             <p class="text-xs text-gray-500 mb-2">
-                                <span class="font-medium text-gray-600">Admin</span> 
+                                <span class="font-medium text-gray-400">Admin</span> 
                                 <span class="ml-2">| ${date}</span>
                             </p>
-                            <p class="text-gray-700 whitespace-pre-wrap">${noti.content}</p>
+                            <p class="text-gray-300 whitespace-pre-wrap">${noti.content}</p>
                         </div>
                     `;
                     listDiv.innerHTML += notiCard;
@@ -1004,7 +1283,7 @@
         }
 
 
-        // --- View 3: Post Job Form (Updated to use Job Smart Fee) ---
+        // --- View 3: Post Job Form (Removed Video Upload) ---
 
         window.handleJobMediaChange = function(event, type) {
             const files = Array.from(event.target.files);
@@ -1020,16 +1299,6 @@
                 }
                 selectedJobImages = files;
                 statusElement.textContent = `ရွေးချယ်ထားသော ပုံများ: ${files.length} ပုံ (${files.map(f => f.name).join(', ')})`;
-            } else if (type === 'video') {
-                if (files.length > 1) {
-                    alertMessage('အမှား', 'ဗီဒီယို ၁ ခုသာ တင်နိုင်ပါသည်။', 'error');
-                    event.target.value = '';
-                    selectedJobVideo = null;
-                    statusElement.textContent = 'ဗီဒီယို ၁ ခုသာ ရွေးချယ်နိုင်ပါသည်။';
-                    return;
-                }
-                selectedJobVideo = files[0] || null;
-                statusElement.textContent = selectedJobVideo ? `ရွေးချယ်ပြီး: ${selectedJobVideo.name}` : '';
             }
         }
 
@@ -1045,73 +1314,65 @@
                 const posterName = currentUserProfile.passportName || currentUserEmail;
 
                 contentDiv.innerHTML = `
-                    <h2 class="text-xl font-bold mb-4 text-gray-800">အလုပ်သစ်တင်ရန်</h2>
-                    <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h2 class="text-xl font-bold mb-4 text-gray-100">အလုပ်သစ်တင်ရန်</h2>
+                    <div class="dark-card p-6 rounded-xl shadow-md">
                         <form id="job-post-form" class="space-y-4" onsubmit="submitJobPost(event)">
                             
                             <!-- Poster Info (Read-only) -->
-                            <div class="bg-gray-100 p-3 rounded-lg">
-                                <label class="block text-sm font-semibold text-gray-700">တင်သူ၏နာမည်</label>
-                                <p class="text-sm text-gray-600">${posterName}</p>
+                            <div class="bg-gray-800 p-3 rounded-lg">
+                                <label class="block text-sm font-semibold text-gray-300">တင်သူ၏နာမည်</label>
+                                <p class="text-sm text-gray-400">${posterName}</p>
                             </div>
                             
                             <!-- Job Title -->
                             <div>
-                                <label for="job-title" class="block text-sm font-medium text-gray-700">အလုပ်အမည်</label>
-                                <input type="text" id="job-title" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                                <label for="job-title" class="block text-sm font-medium text-gray-300">အလုပ်အမည်</label>
+                                <input type="text" id="job-title" required class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
                             </div>
                             
                             <!-- Job Location -->
                             <div>
-                                <label for="job-location" class="block text-sm font-medium text-gray-700">အလုပ်တည်နေရာ</label>
-                                <input type="text" id="job-location" required placeholder="ဥပမာ။ ဘန်ကောက်၊ ချင်းမိုင်" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                                <label for="job-location" class="block text-sm font-medium text-gray-300">အလုပ်တည်နေရာ</label>
+                                <input type="text" id="job-location" required placeholder="ဥပမာ။ ဘန်ကောက်၊ ချင်းမိုင်" class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
                             </div>
                             
-                            <!-- NEW: Job Smart Fee -->
+                            <!-- Job Smart Fee -->
                             <div>
-                                <label for="job-smart-fee" class="block text-sm font-medium text-gray-700">💸 အလုပ်စမတ်ခ (ဘတ်)</label>
-                                <input type="number" id="job-smart-fee" required placeholder="ဥပမာ။ 1000 (ဘတ်)" min="0" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                                <label for="job-smart-fee" class="block text-sm font-medium text-gray-300">💸 အလုပ်စမတ်ခ (ဘတ်)</label>
+                                <input type="number" id="job-smart-fee" required placeholder="ဥပမာ။ 1000 (ဘတ်)" min="0" class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
                             </div>
 
                             <!-- Salary Smart Card (Number Inputs) -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">💵 လစာ (ဘတ်)</label>
+                                <label class="block text-sm font-medium text-gray-300">💵 လစာ (ဘတ်)</label>
                                 <div class="grid grid-cols-2 gap-2 mt-1">
-                                    <input type="number" id="salary-min" required placeholder="အနိမ့်ဆုံး" min="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
-                                    <input type="number" id="salary-max" required placeholder="အမြင့်ဆုံး" min="0" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                                    <input type="number" id="salary-min" required placeholder="အနိမ့်ဆုံး" min="0" class="dark-input block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                                    <input type="number" id="salary-max" required placeholder="အမြင့်ဆုံး" min="0" class="dark-input block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
                                 </div>
                             </div>
 
                             <!-- Job Description -->
                             <div>
-                                <label for="job-description" class="block text-sm font-medium text-gray-700">အလုပ်အကြောင်းအရာ/အသေးစိတ်</label>
-                                <textarea id="job-description" rows="5" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"></textarea>
+                                <label for="job-description" class="block text-sm font-medium text-gray-300">အလုပ်အကြောင်းအရာ/အသေးစိတ်</label>
+                                <textarea id="job-description" rows="5" required class="dark-input mt-1 block w-full rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"></textarea>
                             </div>
                             
-                            <!-- Media Uploads (No change) -->
-                            <div class="pt-2 border-t">
-                                <label class="block text-sm font-semibold text-gray-800 mb-2">ဓာတ်ပုံ ၃ ပုံ နှင့် ဗီဒီယို ၁ ခု (Cloudinary Upload)</label>
+                            <!-- Media Uploads (Images Only - No Video) -->
+                            <div class="pt-2 border-t border-gray-700">
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">ဓာတ်ပုံများ (အများဆုံး ၃ ပုံ)</label>
                                 <div class="space-y-3">
                                     <!-- Images -->
                                     <div>
-                                        <label for="job-images-file" class="block text-xs font-medium text-gray-600 mb-1">အလုပ် ဓာတ်ပုံများ (အများဆုံး ၃ ပုံ)</label>
+                                        <label for="job-images-file" class="block text-xs font-medium text-gray-400 mb-1">အလုပ် ဓာတ်ပုံများ (အများဆုံး ၃ ပုံ)</label>
                                         <input type="file" id="job-images-file" accept="image/*" multiple 
                                             onchange="handleJobMediaChange(event, 'images')" 
-                                            class="w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-1">
-                                        <p id="job-images-status" class="text-xs text-gray-500 mt-1 text-indigo-600">အနည်းဆုံး ၁ ပုံ လိုအပ်ပါသည်။</p>
-                                    </div>
-                                    <!-- Video -->
-                                    <div>
-                                        <label for="job-video-file" class="block text-xs font-medium text-gray-600 mb-1">အလုပ် ဗီဒီယို (၁ ခု)</label>
-                                        <input type="file" id="job-video-file" accept="video/*" 
-                                            onchange="handleJobMediaChange(event, 'video')" 
-                                            class="w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-1">
-                                        <p id="job-video-status" class="text-xs text-gray-500 mt-1 text-indigo-600"></p>
+                                            class="w-full text-sm text-gray-400 border border-gray-600 rounded-lg p-1 bg-gray-800">
+                                        <p id="job-images-status" class="text-xs text-gray-400 mt-1 text-indigo-400">အနည်းဆုံး ၁ ပုံ လိုအပ်ပါသည်။</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mt-6">
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-base font-medium text-white bg-green-700 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mt-6">
                                 အလုပ်တင်ရန်
                             </button>
                         </form>
@@ -1121,7 +1382,7 @@
             } catch (error) {
                 logStatus(`Job Post Render Failed CRITICALLY: ${error.message}`, true);
                 contentDiv.innerHTML = `
-                    <div class="text-red-500 text-center p-8 bg-red-50 rounded-lg border border-red-200 mt-10">
+                    <div class="text-red-400 text-center p-8 bg-red-900 bg-opacity-30 rounded-lg border border-red-800 mt-10">
                         <h3 class="font-bold text-lg mb-2">မြင်ကွင်းပြရာတွင် အရေးကြီးသော အမှားဖြစ်ပွားပါသည်။</h3>
                         <p class="text-sm">အမှား: ${error.message}</p>
                         <p class="text-xs mt-2">Console (Log) တွင် အသေးစိတ်ကို စစ်ဆေးပါ။</p>
@@ -1137,7 +1398,7 @@
             // Input Validation & Parsing
             const title = document.getElementById('job-title').value;
             const jobLocation = document.getElementById('job-location').value;
-            const smartFeeInput = document.getElementById('job-smart-fee').value; // NEW
+            const smartFeeInput = document.getElementById('job-smart-fee').value;
             const salaryMinInput = document.getElementById('salary-min').value;
             const salaryMaxInput = document.getElementById('salary-max').value;
             const description = document.getElementById('job-description').value;
@@ -1148,8 +1409,7 @@
 
             const salaryMin = parseInt(salaryMinInput);
             const salaryMax = parseInt(salaryMaxInput);
-            const smartFee = parseInt(smartFeeInput); // NEW
-
+            const smartFee = parseInt(smartFeeInput);
 
             if (isNaN(salaryMin) || isNaN(salaryMax) || salaryMin < 0 || salaryMax < 0 || salaryMin > salaryMax) {
                 return alertMessage('အမှား', 'လစာသည် မှန်ကန်သော ဂဏန်းဖြစ်ရမည်။ (အနိမ့်ဆုံးသည် အမြင့်ဆုံးထက် မပိုရ။)', 'error');
@@ -1169,23 +1429,16 @@
                 const imageUploadPromises = selectedJobImages.map(file => uploadToCloudinary(file));
                 const uploadedImageUrls = await Promise.all(imageUploadPromises);
                 
-                // 2. Upload video (if selected)
-                let uploadedVideoUrl = null;
-                if (selectedJobVideo) {
-                    uploadedVideoUrl = await uploadToCloudinary(selectedJobVideo);
-                }
-                
-                // 3. Prepare job data with real URLs and new fields
+                // 2. Prepare job data with real URLs and new fields
                 const jobData = {
                     title: title,
                     location: jobLocation,
-                    smartFee: smartFee, // NEW: Smart Fee added
+                    smartFee: smartFee,
                     salaryMin: salaryMin,
                     salaryMax: salaryMax,
                     description: description,
                     media: {
-                        images: uploadedImageUrls.filter(url => url), 
-                        video: uploadedVideoUrl
+                        images: uploadedImageUrls.filter(url => url)
                     },
                     postedBy: currentUserId,
                     postedByName: currentUserProfile?.passportName || currentUserEmail,
@@ -1193,20 +1446,16 @@
                     timestamp: Date.now()
                 };
 
-                // 4. Save to Firestore
+                // 3. Save to Firestore
                 const collectionRef = collection(db, `artifacts/${appId}/public/data/jobs`);
                 const newDocRef = await addDoc(collectionRef, jobData);
                 logStatus(`Job saved to Firestore: ${newDocRef.id}`);
                 
-                // 5. Reset file state and form elements
+                // 4. Reset file state and form elements
                 selectedJobImages = [];
-                selectedJobVideo = null;
                 document.getElementById('job-post-form').reset();
-                // Explicitly reset file inputs and status messages
                 document.getElementById('job-images-file').value = ''; 
-                document.getElementById('job-video-file').value = ''; 
                 document.getElementById('job-images-status').textContent = 'အနည်းဆုံး ၁ ပုံ လိုအပ်ပါသည်။';
-                document.getElementById('job-video-status').textContent = '';
                 
                 hideLoading();
                 alertMessage('အလုပ်တင်ခြင်း အောင်မြင်ပါသည်', `အလုပ်အသစ်ကို Home စာမျက်နှာတွင် ချက်ချင်း မြင်နိုင်ပါပြီ။ (ID: ${newDocRef.id})`, 'success');
@@ -1218,43 +1467,43 @@
             }
         }
         
-        // --- Custom Alert/Modal (Updated for Contact Info Modal) ---
+        // --- Custom Alert/Modal (Updated for Dark Mode) ---
         
         function alertMessage(title, message, type = 'info') {
             const modalId = 'custom-alert-modal';
             let modal = document.getElementById(modalId);
             if (!modal) {
                 modal = document.createElement('div');
-                modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50 p-4 hidden';
+                modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center z-50 p-4 hidden';
                 modal.id = modalId;
                 document.body.appendChild(modal);
             }
             
-            modal.querySelector('.modal-content')?.remove(); // Remove previous content if contact modal was used
+            modal.querySelector('.modal-content')?.remove();
 
-            let bgColor = 'bg-indigo-100';
-            let titleColor = 'text-indigo-800';
+            let bgColor = 'bg-indigo-900';
+            let titleColor = 'text-indigo-300';
             let icon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
 
             if (type === 'success') {
-                bgColor = 'bg-green-100';
-                titleColor = 'text-green-800';
+                bgColor = 'bg-green-900';
+                titleColor = 'text-green-300';
                 icon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
             } else if (type === 'error') {
-                bgColor = 'bg-red-100';
-                titleColor = 'text-red-800';
+                bgColor = 'bg-red-900';
+                titleColor = 'text-red-300';
                 icon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
             }
 
             const alertHtml = `
-                <div class="modal-content bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm transform transition-all">
+                <div class="modal-content dark-card rounded-xl shadow-2xl p-6 w-full max-w-sm transform transition-all">
                     <div class="flex items-center ${bgColor} p-3 rounded-lg mb-4">
                         <div class="${titleColor} mr-3">${icon}</div>
                         <h3 class="text-lg font-bold ${titleColor}">${title}</h3>
                     </div>
-                    <p class="text-gray-700 mb-6">${message}</p>
+                    <p class="text-gray-300 mb-6">${message}</p>
                     <button onclick="document.getElementById('${modalId}').classList.add('hidden')"
-                            class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-150">
+                            class="w-full bg-indigo-700 text-white py-2 rounded-lg hover:bg-indigo-600 transition duration-150">
                         နားလည်ပါပြီ
                     </button>
                 </div>
@@ -1263,13 +1512,13 @@
             modal.classList.remove('hidden');
         }
         
-        // NEW: Dedicated function for Contact Modal
+        // NEW: Dedicated function for Contact Modal (Updated for Dark Mode)
         function showCustomModal(title, contentHtml, type) {
             const modalId = 'custom-alert-modal';
             let modal = document.getElementById(modalId);
             if (!modal) {
                 modal = document.createElement('div');
-                modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50 p-4 hidden';
+                modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center z-50 p-4 hidden';
                 modal.id = modalId;
                 document.body.appendChild(modal);
             }
@@ -1277,17 +1526,19 @@
             let icon;
             if (type === 'contact') {
                  icon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-3"/><path d="m6 16-2 6"/><path d="m14 16-2 6"/><path d="M16 2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/></svg>`;
+            } else if (type === 'user') {
+                icon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
             }
 
             const modalHtml = `
-                <div class="modal-content bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm transform transition-all">
-                    <div class="flex items-center bg-indigo-100 p-3 rounded-lg mb-4">
-                        <div class="text-indigo-800 mr-3">${icon}</div>
-                        <h3 class="text-lg font-bold text-indigo-800">${title}</h3>
+                <div class="modal-content dark-card rounded-xl shadow-2xl p-6 w-full max-w-sm transform transition-all">
+                    <div class="flex items-center bg-indigo-900 p-3 rounded-lg mb-4">
+                        <div class="text-indigo-300 mr-3">${icon}</div>
+                        <h3 class="text-lg font-bold text-indigo-300">${title}</h3>
                     </div>
                     ${contentHtml}
                     <button onclick="document.getElementById('${modalId}').classList.add('hidden')"
-                            class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-150 mt-6">
+                            class="w-full bg-indigo-700 text-white py-2 rounded-lg hover:bg-indigo-600 transition duration-150 mt-6">
                         ပိတ်မည်
                     </button>
                 </div>
