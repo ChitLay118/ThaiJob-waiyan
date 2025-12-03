@@ -186,7 +186,8 @@
                 return result.secure_url; // Return the secure URL
             } catch (error) {
                 logStatus(`Cloudinary Upload Error: ${error.message}`, true);
-                throw new Error('ပုံ သို့မဟုတ် ဗီဒီယို တင်ရာတွင် အမှားဖြစ်ပွားပါသည်။');
+                // Re-throw with a user-friendly message
+                throw new Error('ပုံ သို့မဟုတ် ဗီဒီယို တင်ရာတွင် အမှားဖြစ်ပွားပါသည်။ Cloudinary Credentials ကို စစ်ဆေးပါ။');
             }
         }
 
@@ -335,7 +336,6 @@
             const publicJobsCollectionRef = collection(db, `artifacts/${appId}/public/data/jobs`);
             
             // ** FIX: Using a simple query to fetch ALL jobs in the public collection.
-            // ** This bypasses the need for complex indexes that might fail.
             const q = query(publicJobsCollectionRef); 
 
             logStatus("Starting public jobs listener...");
@@ -419,29 +419,36 @@
             
             hideLoading();
             
-            if (isUserAdmin && currentView === 'profile') {
-                return renderAdminPanel();
-            }
+            try {
+                if (isUserAdmin && currentView === 'profile') {
+                    return renderAdminPanel();
+                }
 
-            if (currentView === 'post' && (!currentUserProfile || currentUserProfile.status !== 'approved')) {
-                 currentView = 'profile'; 
-            }
+                if (currentView === 'post' && (!currentUserProfile || currentUserProfile.status !== 'approved')) {
+                     // Force redirect to profile if trying to post without approval
+                     logStatus("Tried to access Post View without approval. Redirecting to Profile.", true);
+                     currentView = 'profile'; 
+                }
 
-            switch (currentView) {
-                case 'home':
-                    renderHome();
-                    break;
-                case 'profile':
-                    renderRegistrationProfile();
-                    break;
-                case 'post':
-                    renderJobPostForm();
-                    break;
-                case 'notifications':
-                    renderNotifications();
-                    break;
-                default:
-                    renderHome();
+                switch (currentView) {
+                    case 'home':
+                        renderHome();
+                        break;
+                    case 'profile':
+                        renderRegistrationProfile();
+                        break;
+                    case 'post':
+                        renderJobPostForm();
+                        break;
+                    case 'notifications':
+                        renderNotifications();
+                        break;
+                    default:
+                        renderHome();
+                }
+            } catch (error) {
+                 logStatus(`Critical Error during View Render for ${currentView}: ${error.message}`, true);
+                 contentDiv.innerHTML = `<div class="text-red-500 text-center p-8">မြင်ကွင်းပြရာတွင် အရေးကြီးသော အမှားဖြစ်ပွားပါသည်။ Console ကို စစ်ဆေးပါ။: ${error.message}</div>`;
             }
         }
 
@@ -485,7 +492,10 @@
             }
 
             jobsList.forEach(job => {
-                const imagePreviews = job.media?.images?.map((url, i) => `
+                // Ensure media structure exists
+                const images = job.media?.images || [];
+
+                const imagePreviews = images.map((url, i) => `
                     <img src="${url}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/9ca3af/ffffff?text=Image%20${i+1}'" alt="Job Image ${i+1}" class="w-full h-16 object-cover rounded-lg">
                 `).join('') || '';
                 
@@ -560,8 +570,8 @@
                 statusBadge = '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-full font-medium">✅ အလုပ်တင်ရန် ခွင့်ပြုပြီး</span>';
                 
                 // Show uploaded images if available
-                const passportImg = user.passportPhotoUrl ? `<img src="${user.passportPhotoUrl}" alt="Passport Photo" class="w-full h-20 object-cover rounded-lg">` : '<div class="h-20 flex items-center justify-center">ပတ်စပို့ ဓာတ်ပုံ မရှိပါ</div>';
-                const userImg = user.userPhotoUrl ? `<img src="${user.userPhotoUrl}" alt="User Photo" class="w-full h-20 object-cover rounded-lg">` : '<div class="h-20 flex items-center justify-center">လူ ဓာတ်ပုံ မရှိပါ</div>';
+                const passportImg = user.passportPhotoUrl ? `<img src="${user.passportPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/9ca3af/ffffff?text=Passport%20Photo'" alt="Passport Photo" class="w-full h-20 object-cover rounded-lg">` : '<div class="h-20 flex items-center justify-center text-xs text-gray-500">ပတ်စပို့ ဓာတ်ပုံ မရှိပါ</div>';
+                const userImg = user.userPhotoUrl ? `<img src="${user.userPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/9ca3af/ffffff?text=User%20Photo'" alt="User Photo" class="w-full h-20 object-cover rounded-lg">` : '<div class="h-20 flex items-center justify-center text-xs text-gray-500">လူ ဓာတ်ပုံ မရှိပါ</div>';
 
 
                 formContent = `
@@ -759,8 +769,8 @@
                         <p class="text-sm text-gray-700 mb-2"><strong>လိပ်စာ:</strong> ${user.address}</p>
                         
                         <div class="grid grid-cols-2 gap-4 pt-2 mb-3">
-                            ${user.passportPhotoUrl ? `<img src="${user.passportPhotoUrl}" alt="Passport Photo" class="w-full h-16 object-cover rounded-lg">` : '<div class="text-center text-xs text-gray-500 bg-gray-200 p-2 rounded-lg">Passport Photo N/A</div>'}
-                            ${user.userPhotoUrl ? `<img src="${user.userPhotoUrl}" alt="User Photo" class="w-full h-16 object-cover rounded-lg">` : '<div class="text-center text-xs text-gray-500 bg-gray-200 p-2 rounded-lg">User Photo N/A</div>'}
+                            ${user.passportPhotoUrl ? `<img src="${user.passportPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/9ca3af/ffffff?text=Passport%20Photo'" alt="Passport Photo" class="w-full h-16 object-cover rounded-lg">` : '<div class="text-center text-xs text-gray-500 bg-gray-200 p-2 rounded-lg">Passport Photo N/A</div>'}
+                            ${user.userPhotoUrl ? `<img src="${user.userPhotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/100x64/9ca3af/ffffff?text=User%20Photo'" alt="User Photo" class="w-full h-16 object-cover rounded-lg">` : '<div class="text-center text-xs text-gray-500 bg-gray-200 p-2 rounded-lg">User Photo N/A</div>'}
                         </div>
 
                         <button onclick="approveUser('${user.uid}')" class="w-full bg-green-600 text-white py-2 rounded-lg text-sm hover:bg-green-700 transition duration-150 mt-2">
@@ -880,7 +890,9 @@
         }
 
         function renderJobPostForm() {
+            logStatus("Attempting to render Job Post Form...");
             if (!currentUserProfile || currentUserProfile.status !== 'approved') {
+                logStatus("Job Post Form redirecting to Profile: User not approved.", true);
                 return renderRegistrationProfile(); 
             }
 
@@ -959,21 +971,31 @@
                     </form>
                 </div>
             `;
+            logStatus("Successfully rendered Job Post Form.");
         }
         
         window.submitJobPost = async function(event) {
             event.preventDefault();
             if (!currentUserId || !db) return alertMessage('အမှား', 'စနစ်ကို စတင်၍ မရသေးပါ။', 'error');
-
+            
+            // Input Validation & Parsing
             const title = document.getElementById('job-title').value;
             const jobLocation = document.getElementById('job-location').value;
             const jobPhoneNumber = document.getElementById('job-phone-number').value;
-            const salaryMin = parseInt(document.getElementById('salary-min').value);
-            const salaryMax = parseInt(document.getElementById('salary-max').value);
+            const salaryMinInput = document.getElementById('salary-min').value;
+            const salaryMaxInput = document.getElementById('salary-max').value;
             const description = document.getElementById('job-description').value;
 
+            if (!salaryMinInput || !salaryMaxInput) {
+                return alertMessage('အမှား', 'လစာ အနည်းဆုံး/အများဆုံးကို ဖြည့်သွင်းရန် လိုအပ်ပါသည်။', 'error');
+            }
+
+            const salaryMin = parseInt(salaryMinInput);
+            const salaryMax = parseInt(salaryMaxInput);
+
+
             if (isNaN(salaryMin) || isNaN(salaryMax) || salaryMin <= 0 || salaryMax <= 0 || salaryMin > salaryMax) {
-                return alertMessage('အမှား', 'လစာသည် မှန်ကန်သော ဂဏန်းဖြစ်ရမည်။', 'error');
+                return alertMessage('အမှား', 'လစာသည် မှန်ကန်သော ဂဏန်းဖြစ်ရမည်။ (အနိမ့်ဆုံးသည် အမြင့်ဆုံးထက် မပိုရ။)', 'error');
             }
             if (selectedJobImages.length === 0) {
                 return alertMessage('အမှား', 'အလုပ်ဓာတ်ပုံ အနည်းဆုံး တစ်ပုံ ရွေးချယ်ရန် လိုအပ်ပါသည်။', 'error');
@@ -1004,7 +1026,7 @@
                     salaryMax: salaryMax,
                     description: description,
                     media: {
-                        images: uploadedImageUrls, 
+                        images: uploadedImageUrls.filter(url => url), // Filter out nulls
                         video: uploadedVideoUrl
                     },
                     postedBy: currentUserId,
@@ -1018,10 +1040,15 @@
                 const newDocRef = await addDoc(collectionRef, jobData);
                 logStatus(`Job saved to Firestore: ${newDocRef.id}`);
                 
-                // Reset file state and form
+                // 5. Reset file state and form elements
                 selectedJobImages = [];
                 selectedJobVideo = null;
                 document.getElementById('job-post-form').reset();
+                // Explicitly reset file inputs and status messages
+                document.getElementById('job-images-file').value = ''; 
+                document.getElementById('job-video-file').value = ''; 
+                document.getElementById('job-images-status').textContent = 'အနည်းဆုံး ၁ ပုံ လိုအပ်ပါသည်။';
+                document.getElementById('job-video-status').textContent = '';
                 
                 hideLoading();
                 // Show the newly created Job ID in the success message
