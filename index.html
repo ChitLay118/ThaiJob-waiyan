@@ -891,87 +891,100 @@
 
         function renderJobPostForm() {
             logStatus("Attempting to render Job Post Form...");
-            if (!currentUserProfile || currentUserProfile.status !== 'approved') {
-                logStatus("Job Post Form redirecting to Profile: User not approved.", true);
-                return renderRegistrationProfile(); 
+            
+            // New Robust Error Handling for Rendering
+            try {
+                if (!currentUserProfile || currentUserProfile.status !== 'approved') {
+                    logStatus("Job Post Form redirecting to Profile: User not approved.", true);
+                    return renderRegistrationProfile(); 
+                }
+
+                const posterName = currentUserProfile.passportName || currentUserEmail;
+
+                contentDiv.innerHTML = `
+                    <h2 class="text-xl font-bold mb-4 text-gray-800">အလုပ်သစ်တင်ရန်</h2>
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <form id="job-post-form" class="space-y-4" onsubmit="submitJobPost(event)">
+                            
+                            <!-- Poster Info (Read-only) -->
+                            <div class="bg-gray-100 p-3 rounded-lg">
+                                <label class="block text-sm font-semibold text-gray-700">တင်သူ၏နာမည်</label>
+                                <p class="text-sm text-gray-600">${posterName}</p>
+                            </div>
+                            
+                            <!-- Job Title -->
+                            <div>
+                                <label for="job-title" class="block text-sm font-medium text-gray-700">အလုပ်အမည်</label>
+                                <input type="text" id="job-title" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                            </div>
+                            
+                            <!-- Job Location -->
+                            <div>
+                                <label for="job-location" class="block text-sm font-medium text-gray-700">အလုပ်တည်နေရာ</label>
+                                <input type="text" id="job-location" required placeholder="ဥပမာ။ ဘန်ကောက်၊ ချင်းမိုင်" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                            </div>
+                            
+                            <!-- Contact Phone Number -->
+                            <div>
+                                <label for="job-phone-number" class="block text-sm font-medium text-gray-700">ဆက်သွယ်ရန် ဖုန်းနံပါတ်</label>
+                                <input type="tel" id="job-phone-number" required placeholder="ဥပမာ။ 08x-xxxxxxx" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                            </div>
+
+                            <!-- Salary Smart Card (Number Inputs) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">လစာ (ဘတ်)</label>
+                                <div class="grid grid-cols-2 gap-2 mt-1">
+                                    <input type="number" id="salary-min" required placeholder="အနိမ့်ဆုံး" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                                    <input type="number" id="salary-max" required placeholder="အမြင့်ဆုံး" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
+                                </div>
+                            </div>
+
+                            <!-- Job Description -->
+                            <div>
+                                <label for="job-description" class="block text-sm font-medium text-gray-700">အလုပ်အကြောင်းအရာ/အသေးစိတ်</label>
+                                <textarea id="job-description" rows="5" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"></textarea>
+                            </div>
+                            
+                            <!-- Media Uploads (Real Upload) -->
+                            <div class="pt-2 border-t">
+                                <label class="block text-sm font-semibold text-gray-800 mb-2">ဓာတ်ပုံ ၃ ပုံ နှင့် ဗီဒီယို ၁ ခု (Cloudinary Upload)</label>
+                                <div class="space-y-3">
+                                    <!-- Images -->
+                                    <div>
+                                        <label for="job-images-file" class="block text-xs font-medium text-gray-600 mb-1">အလုပ် ဓာတ်ပုံများ (အများဆုံး ၃ ပုံ)</label>
+                                        <input type="file" id="job-images-file" accept="image/*" multiple 
+                                            onchange="handleJobMediaChange(event, 'images')" 
+                                            class="w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-1">
+                                        <p id="job-images-status" class="text-xs text-gray-500 mt-1 text-indigo-600">အနည်းဆုံး ၁ ပုံ လိုအပ်ပါသည်။</p>
+                                    </div>
+                                    <!-- Video -->
+                                    <div>
+                                        <label for="job-video-file" class="block text-xs font-medium text-gray-600 mb-1">အလုပ် ဗီဒီယို (၁ ခု)</label>
+                                        <input type="file" id="job-video-file" accept="video/*" 
+                                            onchange="handleJobMediaChange(event, 'video')" 
+                                            class="w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-1">
+                                        <p id="job-video-status" class="text-xs text-gray-500 mt-1 text-indigo-600"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mt-6">
+                                အလုပ်တင်ရန်
+                            </button>
+                        </form>
+                    </div>
+                `;
+                logStatus("Successfully rendered Job Post Form.");
+            } catch (error) {
+                logStatus(`Job Post Render Failed CRITICALLY: ${error.message}`, true);
+                contentDiv.innerHTML = `
+                    <div class="text-red-500 text-center p-8 bg-red-50 rounded-lg border border-red-200 mt-10">
+                        <h3 class="font-bold text-lg mb-2">မြင်ကွင်းပြရာတွင် အရေးကြီးသော အမှားဖြစ်ပွားပါသည်။</h3>
+                        <p class="text-sm">အမှား: ${error.message}</p>
+                        <p class="text-xs mt-2">Console (Log) တွင် အသေးစိတ်ကို စစ်ဆေးပါ။</p>
+                    </div>
+                `;
             }
-
-            const posterName = currentUserProfile.passportName || currentUserEmail;
-
-            contentDiv.innerHTML = `
-                <h2 class="text-xl font-bold mb-4 text-gray-800">အလုပ်သစ်တင်ရန်</h2>
-                <div class="bg-white p-6 rounded-xl shadow-md">
-                    <form id="job-post-form" class="space-y-4" onsubmit="submitJobPost(event)">
-                        
-                        <!-- Poster Info (Read-only) -->
-                        <div class="bg-gray-100 p-3 rounded-lg">
-                            <label class="block text-sm font-semibold text-gray-700">တင်သူ၏နာမည်</label>
-                            <p class="text-sm text-gray-600">${posterName}</p>
-                        </div>
-                        
-                        <!-- Job Title -->
-                        <div>
-                            <label for="job-title" class="block text-sm font-medium text-gray-700">အလုပ်အမည်</label>
-                            <input type="text" id="job-title" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
-                        </div>
-                        
-                        <!-- Job Location -->
-                        <div>
-                            <label for="job-location" class="block text-sm font-medium text-gray-700">အလုပ်တည်နေရာ</label>
-                            <input type="text" id="job-location" required placeholder="ဥပမာ။ ဘန်ကောက်၊ ချင်းမိုင်" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
-                        </div>
-                        
-                        <!-- Contact Phone Number -->
-                        <div>
-                            <label for="job-phone-number" class="block text-sm font-medium text-gray-700">ဆက်သွယ်ရန် ဖုန်းနံပါတ်</label>
-                            <input type="tel" id="job-phone-number" required placeholder="ဥပမာ။ 08x-xxxxxxx" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
-                        </div>
-
-                        <!-- Salary Smart Card (Number Inputs) -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">လစာ (ဘတ်)</label>
-                            <div class="grid grid-cols-2 gap-2 mt-1">
-                                <input type="number" id="salary-min" required placeholder="အနိမ့်ဆုံး" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
-                                <input type="number" id="salary-max" required placeholder="အမြင့်ဆုံး" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2">
-                            </div>
-                        </div>
-
-                        <!-- Job Description -->
-                        <div>
-                            <label for="job-description" class="block text-sm font-medium text-gray-700">အလုပ်အကြောင်းအရာ/အသေးစိတ်</label>
-                            <textarea id="job-description" rows="5" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"></textarea>
-                        </div>
-                        
-                        <!-- Media Uploads (Real Upload) -->
-                        <div class="pt-2 border-t">
-                            <label class="block text-sm font-semibold text-gray-800 mb-2">ဓာတ်ပုံ ၃ ပုံ နှင့် ဗီဒီယို ၁ ခု (Cloudinary Upload)</label>
-                            <div class="space-y-3">
-                                <!-- Images -->
-                                <div>
-                                    <label for="job-images-file" class="block text-xs font-medium text-gray-600 mb-1">အလုပ် ဓာတ်ပုံများ (အများဆုံး ၃ ပုံ)</label>
-                                    <input type="file" id="job-images-file" accept="image/*" multiple 
-                                           onchange="handleJobMediaChange(event, 'images')" 
-                                           class="w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-1">
-                                    <p id="job-images-status" class="text-xs text-gray-500 mt-1 text-indigo-600">အနည်းဆုံး ၁ ပုံ လိုအပ်ပါသည်။</p>
-                                </div>
-                                <!-- Video -->
-                                <div>
-                                    <label for="job-video-file" class="block text-xs font-medium text-gray-600 mb-1">အလုပ် ဗီဒီယို (၁ ခု)</label>
-                                    <input type="file" id="job-video-file" accept="video/*" 
-                                           onchange="handleJobMediaChange(event, 'video')" 
-                                           class="w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-1">
-                                    <p id="job-video-status" class="text-xs text-gray-500 mt-1 text-indigo-600"></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mt-6">
-                            အလုပ်တင်ရန်
-                        </button>
-                    </form>
-                </div>
-            `;
-            logStatus("Successfully rendered Job Post Form.");
         }
         
         window.submitJobPost = async function(event) {
@@ -1053,7 +1066,8 @@
                 hideLoading();
                 // Show the newly created Job ID in the success message
                 alertMessage('အလုပ်တင်ခြင်း အောင်မြင်ပါသည်', `အလုပ်အသစ်ကို Home စာမျက်နှာတွင် ချက်ချင်း မြင်နိုင်ပါပြီ။ (ID: ${newDocRef.id})`, 'success');
-                setView('home');
+                // *** FIX: Explicitly set view back to home after successful submission ***
+                setView('home'); 
             } catch (error) {
                 hideLoading();
                 logStatus(`Job Post Submission Error: ${error.message}`, true);
