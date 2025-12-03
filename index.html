@@ -82,7 +82,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, addDoc, updateDoc, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, addDoc, updateDoc, getDocs, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONSTANTS ---
         const ADMIN_EMAIL = 'c388925@gmail.com';
@@ -312,34 +312,22 @@
             });
 
 
-            // 3. Listen for pending users (Admin only) - Simplified local fetch/filter
+            // 3. Listen for pending users (Admin only) - FIXED: Use public collection for visibility
             if (isUserAdmin) {
-                 const allUsersCollectionRef = collection(db, `artifacts/${appId}/users`);
-                 getDocs(allUsersCollectionRef).then(snapshot => {
+                const pendingColRef = collection(db, `artifacts/${appId}/public/data/pending_profiles`);
+                onSnapshot(pendingColRef, (snapshot) => {
                     pendingUsersList = [];
-                    const profilePromises = [];
-
-                    snapshot.forEach(userDoc => {
-                        const uid = userDoc.id;
-                        const profileDocRef = doc(db, `artifacts/${appId}/users/${uid}/profile/data`);
-                        profilePromises.push(getDoc(profileDocRef).then(profileSnap => {
-                            // Find users who have submitted a profile and are pending
-                            if (profileSnap.exists() && profileSnap.data().status === 'pending') {
-                                pendingUsersList.push({ uid: uid, email: 'Email N/A (Admin View Mock)', ...profileSnap.data() });
-                            }
-                        }));
+                    snapshot.forEach(doc => {
+                        // Use doc.id as the actual UID since we store it as the document ID
+                        pendingUsersList.push({ uid: doc.id, ...doc.data() });
                     });
-
-                    Promise.all(profilePromises).then(() => {
-                        logStatus(`Found ${pendingUsersList.length} pending users.`);
-                        if (currentView === 'profile') {
-                            renderAdminPanel(); 
-                        }
-                    });
-
-                 }).catch(error => {
-                     logStatus(`Admin Pending User Fetch Error: ${error.message}`, true);
-                 });
+                    logStatus(`Fetched ${pendingUsersList.length} pending users from public collection.`);
+                    if (currentView === 'profile') {
+                        renderAdminPanel(); 
+                    }
+                }, (error) => {
+                    logStatus(`Admin Pending User Snapshot Error: ${error.message}`, true);
+                });
             }
 
 
@@ -694,12 +682,17 @@
                     passportPhotoUrl: passportUrl,
                     userPhotoUrl: userPhotoUrl,
                     status: 'pending', // Initial status is pending admin approval
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    email: currentUserEmail // Add email for easy admin view
                 };
 
-                // 3. Save to Firestore
+                // 3a. Save to User's Private Profile
                 const userDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/profile/data`);
                 await setDoc(userDocRef, profileData);
+                
+                // 3b. **FIX**: Save copy to Public Pending Collection for Admin visibility (using UID as doc ID)
+                const pendingProfilesDocRef = doc(db, `artifacts/${appId}/public/data/pending_profiles`, currentUserId); 
+                await setDoc(pendingProfilesDocRef, profileData);
 
                 // Reset file state
                 selectedPassportFile = null;
@@ -751,6 +744,7 @@
                 const userCard = `
                     <div class="bg-yellow-50 p-4 mb-3 rounded-lg border border-yellow-200 shadow-sm">
                         <p class="font-bold text-gray-800">${user.passportName || 'အမည်မဖော်ပြထားပါ'}</p>
+                        <p class="text-sm text-gray-700"><strong>အီးမေးလ်:</strong> ${user.email}</p>
                         <p class="text-sm text-gray-700"><strong>UID:</strong> ${user.uid.substring(0, 8)}...</p>
                         <p class="text-sm text-gray-700"><strong>ဖုန်း:</strong> ${user.thaiPhoneNumber}</p>
                         <p class="text-sm text-gray-700 mb-2"><strong>လိပ်စာ:</strong> ${user.address}</p>
@@ -801,9 +795,14 @@
             if (!isUserAdmin || !db) return alertMessage('အမှား', 'Admin အဖြစ် ဝင်ရောက်ထားရပါမည်။', 'error');
 
             try {
-                // Update the user's profile status
+                // 1. Update the user's private profile status
                 const userDocRef = doc(db, `artifacts/${appId}/users/${userIdToApprove}/profile/data`);
                 await updateDoc(userDocRef, { status: 'approved' });
+                
+                // 2. **FIX**: Delete the public pending profile document to remove it from the admin's view
+                const pendingProfilesDocRef = doc(db, `artifacts/${appId}/public/data/pending_profiles`, userIdToApprove);
+                await deleteDoc(pendingProfilesDocRef);
+                
                 alertMessage('ခွင့်ပြုချက် အောင်မြင်', `User ID: ${userIdToApprove.substring(0, 8)} ကို အောင်မြင်စွာ ခွင့်ပြုလိုက်ပါပြီ။`, 'success');
             } catch (error) {
                 logStatus(`Admin Approval Error: ${error.message}`, true);
