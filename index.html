@@ -312,7 +312,7 @@
             });
 
 
-            // 3. Listen for pending users (Admin only) - FIXED: Use public collection for visibility
+            // 3. Listen for pending users (Admin only) 
             if (isUserAdmin) {
                 const pendingColRef = collection(db, `artifacts/${appId}/public/data/pending_profiles`);
                 onSnapshot(pendingColRef, (snapshot) => {
@@ -342,7 +342,7 @@
                 });
                 jobsList.sort((a, b) => b.timestamp - a.timestamp); 
                 window.jobsList = jobsList; 
-                logStatus(`Fetched ${jobsList.length} approved public jobs.`);
+                logStatus(`Fetched ${jobsList.length} approved public jobs. Rerendering Home...`); // Added log detail
                 if (currentView === 'home') {
                     renderHome();
                 }
@@ -690,7 +690,7 @@
                 const userDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/profile/data`);
                 await setDoc(userDocRef, profileData);
                 
-                // 3b. **FIX**: Save copy to Public Pending Collection for Admin visibility (using UID as doc ID)
+                // 3b. Save copy to Public Pending Collection for Admin visibility (using UID as doc ID)
                 const pendingProfilesDocRef = doc(db, `artifacts/${appId}/public/data/pending_profiles`, currentUserId); 
                 await setDoc(pendingProfilesDocRef, profileData);
 
@@ -799,7 +799,7 @@
                 const userDocRef = doc(db, `artifacts/${appId}/users/${userIdToApprove}/profile/data`);
                 await updateDoc(userDocRef, { status: 'approved' });
                 
-                // 2. **FIX**: Delete the public pending profile document to remove it from the admin's view
+                // 2. Delete the public pending profile document to remove it from the admin's view
                 const pendingProfilesDocRef = doc(db, `artifacts/${appId}/public/data/pending_profiles`, userIdToApprove);
                 await deleteDoc(pendingProfilesDocRef);
                 
@@ -1001,9 +1001,9 @@
                     timestamp: Date.now()
                 };
 
-                // 4. Save to Firestore
+                // 4. Save to Firestore and get the new document reference
                 const collectionRef = collection(db, `artifacts/${appId}/public/data/jobs`);
-                await addDoc(collectionRef, jobData);
+                const newDocRef = await addDoc(collectionRef, jobData);
                 
                 // Reset file state and form
                 selectedJobImages = [];
@@ -1011,7 +1011,8 @@
                 document.getElementById('job-post-form').reset();
                 
                 hideLoading();
-                alertMessage('အလုပ်တင်ခြင်း အောင်မြင်ပါသည်', 'အလုပ်အသစ်ကို Home စာမျက်နှာတွင် ချက်ချင်း မြင်နိုင်ပါပြီ။', 'success');
+                // Show the newly created Job ID in the success message
+                alertMessage('အလုပ်တင်ခြင်း အောင်မြင်ပါသည်', `အလုပ်အသစ်ကို Home စာမျက်နှာတွင် ချက်ချင်း မြင်နိုင်ပါပြီ။ (ID: ${newDocRef.id})`, 'success');
                 setView('home');
             } catch (error) {
                 hideLoading();
