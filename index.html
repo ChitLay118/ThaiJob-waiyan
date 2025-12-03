@@ -334,9 +334,11 @@
             // 4. Listen for all public job posts (Home view)
             const publicJobsCollectionRef = collection(db, `artifacts/${appId}/public/data/jobs`);
             
-            // ** FIX: Removed 'where("status", "==", "approved")' to avoid potential missing index error.
-            // ** Since only 'approved' jobs are written here by our logic, this should fetch all.
+            // ** FIX: Using a simple query to fetch ALL jobs in the public collection.
+            // ** This bypasses the need for complex indexes that might fail.
             const q = query(publicJobsCollectionRef); 
+
+            logStatus("Starting public jobs listener...");
 
             onSnapshot(q, (snapshot) => {
                 let jobsList = [];
@@ -671,12 +673,14 @@
 
             try {
                 showLoading(); // Show global loading during upload
+                logStatus("Starting profile image upload to Cloudinary...");
 
                 // 1. Upload files concurrently
                 const [passportUrl, userPhotoUrl] = await Promise.all([
                     uploadToCloudinary(selectedPassportFile),
                     uploadToCloudinary(selectedUserPhotoFile)
                 ]);
+                logStatus(`Image uploads complete. Passport URL: ${passportUrl ? 'OK' : 'FAIL'}, User Photo URL: ${userPhotoUrl ? 'OK' : 'FAIL'}`);
                 
                 // 2. Prepare profile data with real URLs
                 const profileData = {
@@ -697,6 +701,7 @@
                 // 3b. Save copy to Public Pending Collection for Admin visibility (using UID as doc ID)
                 const pendingProfilesDocRef = doc(db, `artifacts/${appId}/public/data/pending_profiles`, currentUserId); 
                 await setDoc(pendingProfilesDocRef, profileData);
+                logStatus("Profile saved to private and public pending collections.");
 
                 // Reset file state
                 selectedPassportFile = null;
@@ -976,6 +981,7 @@
 
             try {
                 showLoading();
+                logStatus("Starting job media upload to Cloudinary...");
 
                 // 1. Upload images concurrently
                 const imageUploadPromises = selectedJobImages.map(file => uploadToCloudinary(file));
@@ -986,6 +992,8 @@
                 if (selectedJobVideo) {
                     uploadedVideoUrl = await uploadToCloudinary(selectedJobVideo);
                 }
+                logStatus(`Job media uploads complete. Images: ${uploadedImageUrls.length}, Video URL: ${uploadedVideoUrl ? 'OK' : 'N/A'}`);
+
 
                 // 3. Prepare job data with real URLs
                 const jobData = {
@@ -1008,6 +1016,7 @@
                 // 4. Save to Firestore and get the new document reference
                 const collectionRef = collection(db, `artifacts/${appId}/public/data/jobs`);
                 const newDocRef = await addDoc(collectionRef, jobData);
+                logStatus(`Job saved to Firestore: ${newDocRef.id}`);
                 
                 // Reset file state and form
                 selectedJobImages = [];
